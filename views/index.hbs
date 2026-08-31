@@ -1,0 +1,244 @@
+<div class="hero-image">
+    <img src="/images/ФитнесТренировка.jpg" alt="Современный тренажерный зал PowerGit Gym" loading="lazy">
+    <div class="hero-overlay">
+        <h2>Начни свой путь к лучшей версии себя</h2>
+        <p>Профессиональное оборудование • Сертифицированные тренеры • Индивидуальный подход</p>
+    </div>
+</div>
+
+<main>
+    <section id="about">
+        <h2>О нашем зале</h2>
+        <article>
+            <h3>Почему выбирают PowerGit?</h3>
+            <p>Более <strong>10 лет</strong> мы помогаем людям достигать их спортивных целей. Наш зал - это не
+                просто тренажеры, это <em>сообщество единомышленников</em>.</p>
+
+            <blockquote>
+                <p>"Победа начинается с желания победить. Сила воли - это мышца, которую нужно тренировать каждый
+                    день."</p>
+                <cite>— Арнольд Шварценеггер</cite>
+            </blockquote>
+
+            <ul>
+                <li>Профессиональные сертифицированные тренеры</li>
+                <li>Круглосуточный режим работы</li>
+                <li>Современное оборудование</li>
+                <li>Индивидуальный подход</li>
+            </ul>
+        </article>
+    </section>
+
+    <section id="trainers">
+        <h2>Наша команда тренеров</h2>
+        {{#each trainers}}
+        {{> trainer-card this}}
+        {{/each}}
+    </section>
+
+    <section id="reviews">
+        <h2>Отзывы наших клиентов</h2>
+        {{#each reviews}}
+        <article>
+            <h3>{{this.author}}</h3>
+            <p>"{{this.text}}"</p>
+        </article>
+        {{/each}}
+    </section>
+
+    <section id="nutrition">
+        <h2>Спортивное питание</h2>
+        <article>
+            <h3>Почему важно правильное питание?</h3>
+            <p>Спортивное питание - это <strong>не замена</strong> обычной пище, а <em>дополнение</em> к рациону для
+                достижения лучших результатов.</p>
+
+            <h3>Научная формула питания:</h3>
+            <p><strong>БЖУ<sub>оптимальное</sub> = 2<sub>г/кг</sub> : 3<sub>г/кг</sub> : 1<sub>г/кг</sub></strong></p>
+            <p>Для массы: +500<sub>ккал</sub> сверх нормы, БЖУ = 2.5<sub>г/кг</sub> : 4<sub>г/кг</sub> :
+                1.2<sub>г/кг</sub></p>
+            <p>Для похудения: -500<sub>ккал</sub> от нормы, БЖУ = 2.2<sub>г/кг</sub> : 2<sub>г/кг</sub> :
+                0.8<sub>г/кг</sub></p>
+
+            <blockquote>
+                <q>Питание составляет 70% успеха в бодибилдинге. Можно часами тренироваться, но без правильного
+                    питания результата не будет.</q>
+                <cite>— Ронни Колеман</cite>
+            </blockquote>
+        </article>
+
+        <article>
+            <h3>Наш ассортимент</h3>
+            <ul>
+                <li>
+                    <strong>Протеины</strong>
+                    <ul>
+                        {{#each products.proteins}}
+                        <li>{{this.name}} - {{this.price}}</li>
+                        {{/each}}
+                    </ul>
+                </li>
+                <li>
+                    <strong>Аминокислоты</strong>
+                    <ul>
+                        {{#each products.amino}}
+                        <li>{{this.name}} - {{this.price}}</li>
+                        {{/each}}
+                    </ul>
+                </li>
+                <li>
+                    <strong>Жиросжигатели</strong>
+                    <ul>
+                        {{#each products.fatburners}}
+                        <li>{{this.name}} - {{this.price}}</li>
+                        {{/each}}
+                    </ul>
+                </li>
+                <li>
+                    <strong>Витамины и минералы</strong>
+                    <ul>
+                        {{#each products.vitamins}}
+                        <li>{{this.name}} - {{this.price}}</li>
+                        {{/each}}
+                    </ul>
+                </li>
+            </ul>
+
+            <aside>
+                <h4>Акция!</h4>
+                <p>При покупке протеина и BCAA вместе - <del>3500 руб</del> <ins>3000 руб</ins>!</p>
+                <p><em>Предложение действует до конца месяца</em></p>
+            </aside>
+        </article>
+    </section>
+
+    <section id="facilities">
+        <h2>Наше оснащение</h2>
+        <h3>Силовая зона</h3>
+        <p>Тренажеры Hammer Strength, гантели до 50 кг, штанги</p>
+
+        <h3>Кардио зона</h3>
+        <p>Беговые дорожки, эллипсоиды, велотренажеры</p>
+
+        <h3>Зона функционального тренинга</h3>
+        <p>TRX, канаты, гири, покрытие для кроссфита</p>
+
+        <aside>
+            <h4>Новое поступление!</h4>
+            <p>В этом месяце мы обновили парк кардиотренажеров</p>
+        </aside>
+    </section>
+
+    <section id="pricing">
+        <h2>Тарифные планы</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Тариф</th>
+                    <th>Цена</th>
+                    <th>Возможности</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each pricing}}
+                {{> pricing-row this}}
+                {{/each}}
+            </tbody>
+        </table>
+    </section>
+
+    <section id="contact">
+        <h2>Контакты и запись</h2>
+
+        <div class="contact-info">
+            <p><strong>Адрес:</strong> г. Москва, ул. Спортивная, 15</p>
+            <p><strong>Телефон:</strong> (495) 123-45-67</p>
+            <p><strong>Email:</strong> info@powergitgym.ru</p>
+            <p><strong>Время работы:</strong> 6:00 - 24:00</p>
+        </div>
+
+        <h3>Запись на тренировку</h3>
+
+        <form class="simple-form">
+            <div class="form-group">
+                <label>Ваше имя:</label>
+                <input type="text" required>
+            </div>
+
+            <div class="form-group">
+                <label>Ваш телефон:</label>
+                <input type="tel" required>
+            </div>
+
+            <div class="form-group">
+                <label>Выберите тренера:</label>
+                <select>
+                    {{#each trainers}}
+                    <option>{{this.name}}</option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <button type="submit" class="submit-btn">Отправить заявку</button>
+        </form>
+    </section>
+
+    <section id="gallery">
+        <h2>Видео и фото с тренировок</h2>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+
+        <div class="swiper gallery-swiper">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide">
+                    <img src="/images/Тренировка1.jpg" alt="Тренировка 1">
+                    <div class="slide-caption">Силовая тренировка</div>
+                </div>
+                <div class="swiper-slide">
+                    <img src="/images/Тренировка2.jpg" alt="Тренировка 2">
+                    <div class="slide-caption">Кардио зона</div>
+                </div>
+                <div class="swiper-slide">
+                    <img src="/images/Тренировка3.jpg" alt="Тренировка 3">
+                    <div class="slide-caption">Функциональный тренинг</div>
+                </div>
+                <div class="swiper-slide">
+                    <img src="/images/Тренировка4.jpg" alt="Тренировка 4">
+                    <div class="slide-caption">Групповые занятия</div>
+                </div>
+            </div>
+
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-pagination"></div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+        <script src="/js/gallery.js"></script>
+    </section>
+
+    <section id="membership">
+        <h2>Таблица членства в клубе</h2>
+        <div class="table-container">
+            <table class="membership-table">
+                <thead>
+                    <tr>
+                        <th>Тип членства</th>
+                        <th>Срок</th>
+                        <th>Цена</th>
+                        <th>Преимущества</th>
+                        <th>Акции</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each membership}}
+                    {{> membership-row this}}
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="ad-banner">
+        <p>🔥 Спецпредложение! Первый месяц за 50% стоимости! 🔥</p>
+    </div>
+</main>

@@ -1,0 +1,192 @@
+{
+  "info": {
+    "name": "PowerGit Gym - LR4 REST API",
+    "_postman_id": "e6ad9f72-beb1-4304-8845-e7775d2d6564",
+    "description": "Коллекция для проверки REST API ЛР-4. Совместима с импортом в Postman и Insomnia.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "trainerId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Trainers API",
+      "item": [
+        {
+          "name": "Get Trainers (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/trainers?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "trainers"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Проверка пагинации. В ответе ожидаются поля items/page/limit/total/totalPages и заголовок Link при наличии соседних страниц."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Trainer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Алексей Смирнов\",\n  \"specialization\": \"Функциональный тренинг\",\n  \"experience\": 7,\n  \"photoUrl\": \"https://example.com/images/alex-smirnov.jpg\",\n  \"bio\": \"Сертифицированный тренер, специализация: набор силы и выносливости.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/trainers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "trainers"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201 or 200', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) {",
+                  "  pm.collectionVariables.set('trainerId', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get Trainer By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/trainers/{{trainerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "trainers", "{{trainerId}}"]
+            },
+            "description": "Перед запуском убедитесь, что trainerId заполнен (например, после Create Trainer)."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Trainer (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"experience\": 8,\n  \"bio\": \"Обновленное описание тренера после ЛР-4.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/trainers/{{trainerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "trainers", "{{trainerId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Trainer",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/trainers/{{trainerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "trainers", "{{trainerId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Validation Error Example (Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"A\",\n  \"specialization\": \"\",\n  \"experience\": -5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/trainers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "trainers"]
+            },
+            "description": "Демонстрация ожидаемого ответа 400 от ValidationPipe."
+          },
+          "response": []
+        },
+        {
+          "name": "Not Found Example (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/trainers/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "trainers",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            },
+            "description": "Демонстрация ожидаемого ответа 404 от сервиса/фильтра исключений."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

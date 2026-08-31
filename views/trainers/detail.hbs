@@ -1,0 +1,28 @@
+<main>
+  <section id="trainer-detail">
+    <h2>{{trainer.name}}</h2>
+    <p><strong>Стаж:</strong> {{trainer.experience}} лет</p>
+    <p><strong>Специализация:</strong> {{trainer.specialization}}</p>
+
+    {{#if trainer.bio}}
+      <p><strong>О тренере:</strong> {{trainer.bio}}</p>
+    {{/if}}
+
+    {{#if trainer.photoUrl}}
+      <p><strong>Фото:</strong>
+        <a
+          href="{{trainer.photoUrl}}"
+          target="_blank"
+          rel="noreferrer"
+        >Ссылка</a></p>
+    {{/if}}
+
+    <div class="trainer-detail-actions">
+      <a
+        class="submit-btn"
+        href="/trainers/{{trainer.id}}/edit?auth={{auth}}"
+      >Редактировать</a>
+      <a class="submit-btn" href="/trainers?auth={{auth}}">К списку</a>
+    </div>
+  </section>
+</main>

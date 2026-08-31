@@ -1,0 +1,67 @@
+<main>
+    <section id="nutrition">
+        <h2>Спортивное питание</h2>
+        <article>
+            <h3>Почему важно правильное питание?</h3>
+            <p>Спортивное питание - это <strong>не замена</strong> обычной пище, а <em>дополнение</em> к рациону для
+                достижения лучших результатов.</p>
+
+            <h3>Научная формула питания:</h3>
+            <p><strong>БЖУ<sub>оптимальное</sub> = 2<sub>г/кг</sub> : 3<sub>г/кг</sub> : 1<sub>г/кг</sub></strong></p>
+            <p>Для массы: +500<sub>ккал</sub> сверх нормы, БЖУ = 2.5<sub>г/кг</sub> : 4<sub>г/кг</sub> :
+                1.2<sub>г/кг</sub></p>
+            <p>Для похудения: -500<sub>ккал</sub> от нормы, БЖУ = 2.2<sub>г/кг</sub> : 2<sub>г/кг</sub> :
+                0.8<sub>г/кг</sub></p>
+
+            <blockquote>
+                <q>Питание составляет 70% успеха в бодибилдинге. Можно часами тренироваться, но без правильного
+                    питания результата не будет.</q>
+                <cite>— Ронни Колеман</cite>
+            </blockquote>
+        </article>
+
+        <article>
+            <h3>Наш ассортимент</h3>
+            <ul>
+                <li>
+                    <strong>Протеины</strong>
+                    <ul>
+                        {{#each products.proteins}}
+                        <li>{{this.name}} - {{this.price}}</li>
+                        {{/each}}
+                    </ul>
+                </li>
+                <li>
+                    <strong>Аминокислоты</strong>
+                    <ul>
+                        {{#each products.amino}}
+                        <li>{{this.name}} - {{this.price}}</li>
+                        {{/each}}
+                    </ul>
+                </li>
+                <li>
+                    <strong>Жиросжигатели</strong>
+                    <ul>
+                        {{#each products.fatburners}}
+                        <li>{{this.name}} - {{this.price}}</li>
+                        {{/each}}
+                    </ul>
+                </li>
+                <li>
+                    <strong>Витамины и минералы</strong>
+                    <ul>
+                        {{#each products.vitamins}}
+                        <li>{{this.name}} - {{this.price}}</li>
+                        {{/each}}
+                    </ul>
+                </li>
+            </ul>
+
+            <aside>
+                <h4>Акция!</h4>
+                <p>При покупке протеина и BCAA вместе - <del>3500 руб</del> <ins>3000 руб</ins>!</p>
+                <p><em>Предложение действует до конца месяца</em></p>
+            </aside>
+        </article>
+    </section>
+</main>

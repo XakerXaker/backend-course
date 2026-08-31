@@ -1,0 +1,74 @@
+<main>
+    <section id="add-review">
+        <h2>Оставить отзыв</h2>
+        <form class="simple-form" id="reviewForm" novalidate>
+            <input type="hidden" id="review-id">
+            <div class="form-group">
+                <label for="review-name">Ваше имя:</label>
+                <input type="text" id="review-name" placeholder="Иван Иванов" required minlength="2">
+            </div>
+
+            <div class="form-group">
+                <label for="review-text">Ваш отзыв:</label>
+                <textarea id="review-text" rows="4" placeholder="Напишите ваши впечатления..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="submit-btn" id="submit-btn">Опубликовать отзыв</button>
+            </div>
+        </form>
+    </section>
+
+    <section id="reviews-list-section">
+        <h2>Отзывы наших клиентов</h2>
+        <div id="reviews-container"></div>
+
+        <p id="no-reviews-msg" style="text-align: center; color: #666; display: none;">Пока нет отзывов. Будьте
+            первым!</p>
+    </section>
+
+    <section id="external-reviews-section" style="margin-top: 40px;">
+        <h2>Отзывы из сети</h2>
+        <p style="margin-bottom: 15px; color: #666;">Здесь подгружаются случайные комментарии через Fetch API.</p>
+
+        <button id="load-external-btn" class="submit-btn" style="margin-bottom: 20px; width: auto;">Загрузить другие
+            отзывы</button>
+
+        <div id="fetch-error-msg"
+            style="display: none; background: #ffebee; color: #c62828; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: bold;">
+        </div>
+
+        <div id="preloader" class="loader" style="display: none;"></div>
+
+        <div id="external-reviews-container"></div>
+    </section>
+
+    <template id="review-template">
+        <article class="review-card">
+            <div class="review-header">
+                <h3 class="review-author"></h3>
+                <span class="review-date"></span>
+            </div>
+            <p class="review-content"></p>
+            <div class="review-actions">
+                <button type="button" class="edit-btn">Редактировать</button>
+                <button type="button" class="delete-btn">Удалить</button>
+            </div>
+        </article>
+    </template>
+
+    <template id="external-review-template">
+        <article class="review-card">
+            <div class="review-header">
+                <h3 class="review-author"></h3>
+                <span class="review-date"></span>
+            </div>
+            <p class="review-content"></p>
+        </article>
+    </template>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="/js/reviews.js" defer></script>
+    <script src="/js/fetch-data.js" defer></script>
+</main>

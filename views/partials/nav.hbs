@@ -1,0 +1,14 @@
+<nav class="main-nav">
+    <ul class="nav-list">
+        <li><a href="/?auth={{auth}}" {{#if (eq activePage 'index' )}}class="active" {{/if}}>О нас</a></li>
+        <li><a href="/trainers?auth={{auth}}" {{#if (eq activePage 'trainers' )}}class="active" {{/if}}>Тренеры</a></li>
+        <li><a href="/reviews?auth={{auth}}" {{#if (eq activePage 'reviews' )}}class="active" {{/if}}>Отзывы</a></li>
+        <li><a href="/nutrition?auth={{auth}}" {{#if (eq activePage 'nutrition' )}}class="active" {{/if}}>Питание</a>
+        </li>
+        <li><a href="/facilities?auth={{auth}}" {{#if (eq activePage 'facilities' )}}class="active"
+                {{/if}}>Оснащение</a></li>
+        <li><a href="/pricing?auth={{auth}}" {{#if (eq activePage 'pricing' )}}class="active" {{/if}}>Цены</a></li>
+        <li><a href="/contact?auth={{auth}}" {{#if (eq activePage 'contact' )}}class="active" {{/if}}>Контакты</a></li>
+    </ul>
+</nav>
+</header>

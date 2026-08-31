@@ -1,0 +1,35 @@
+<main>
+    <section id="trainers">
+        <div class="section-toolbar">
+            <h2>Наша команда тренеров</h2>
+            <a class="submit-btn trainer-add-btn" href="/trainers/add?auth={{auth}}">Добавить тренера</a>
+        </div>
+
+        <div id="trainer-toast-zone" aria-live="polite" aria-atomic="true"></div>
+
+        {{#if trainers.length}}
+        <div class="trainer-grid">
+            {{#each trainers}}
+            <article class="trainer-card">
+                <h3>{{name}}</h3>
+                <p><strong>Стаж:</strong> {{experience}} лет</p>
+                <p><strong>Специализация:</strong> {{specialization}}</p>
+                <p>{{bio}}</p>
+
+                <div class="trainer-card-actions">
+                    <a href="/trainers/{{id}}?auth={{../auth}}">Открыть</a>
+                    <a href="/trainers/{{id}}/edit?auth={{../auth}}">Изменить</a>
+                    <form method="post" action="/trainers/{{id}}/delete?auth={{../auth}}">
+                        <button type="submit" class="delete-btn">Удалить</button>
+                    </form>
+                </div>
+            </article>
+            {{/each}}
+        </div>
+        {{else}}
+        <p>Пока нет тренеров. Добавьте первого через форму.</p>
+        {{/if}}
+    </section>
+</main>
+
+<script src="/js/trainers-sse.js"></script>

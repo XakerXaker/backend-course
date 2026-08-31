@@ -1,0 +1,605 @@
+:root {
+  --primary: #2a2d43;
+  --secondary: #ff6b6b;
+  --accent: #4ecdc4;
+  --light: #f7f7f7;
+  --dark: #1a1a2e;
+  --text: #333;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Science Gothic", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--light);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header-area {
+  background: var(--dark);
+  color: white;
+  padding: 10px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.logo h1 {
+  font-size: 28px;
+  color: white;
+  margin-bottom: 5px;
+}
+
+.tagline {
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.main-nav {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 10px;
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  justify-content: space-between;
+}
+
+.nav-list li {
+  flex: 1;
+  text-align: center;
+}
+
+.menu-toggle {
+  display: none;
+  background: var(--secondary);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: white;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 30px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 900px;
+}
+
+.hero-overlay h2 {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+  color: white;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.hero-overlay p {
+  font-size: 1.8rem;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+main {
+  width: 100%;
+  padding: 20px;
+  flex: 1;
+}
+
+section {
+  background: white;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  color: var(--primary);
+  font-size: 36px;
+  margin: 20px 0;
+}
+
+h2 {
+  color: var(--primary);
+  font-size: 28px;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 10px;
+  margin: 20px 0 15px;
+}
+
+h3 {
+  color: var(--secondary);
+  font-size: 22px;
+  margin: 15px 0 10px;
+}
+
+blockquote {
+  background: rgba(78, 205, 196, 0.1);
+  border-left: 4px solid var(--accent);
+  padding: 15px;
+  margin: 15px 0;
+  font-style: italic;
+}
+
+cite {
+  font-weight: bold;
+  color: var(--primary);
+  display: block;
+  margin-top: 10px;
+}
+
+.simple-form {
+  background: #f0f0f0;
+  padding: 20px;
+  border-radius: 5px;
+  margin-top: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.submit-btn {
+  background: var(--primary);
+  color: white;
+  padding: 12px 25px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  width: 100%;
+}
+
+.submit-btn:hover {
+  background: var(--secondary);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+}
+
+table th {
+  background: var(--primary);
+  color: white;
+  padding: 12px;
+  text-align: left;
+}
+
+table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+#gallery h2 {
+  text-align: center;
+}
+
+.gallery-flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+}
+
+.gallery-item {
+  width: 23%;
+  min-width: 200px;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.ad-banner {
+  background: var(--secondary);
+  color: white;
+  text-align: center;
+  padding: 20px;
+  margin: 25px 0;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+footer {
+  background: var(--dark);
+  color: white;
+  padding: 20px;
+  text-align: center;
+  margin-top: 30px;
+}
+
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  .main-nav {
+    display: none;
+  }
+
+  .main-nav.active {
+    display: block;
+  }
+
+  .nav-list {
+    flex-direction: column;
+  }
+
+  .nav-list li {
+    text-align: left;
+    margin: 5px 0;
+  }
+
+  .hero-image {
+    height: 80vh;
+  }
+
+  .hero-overlay h2 {
+    font-size: 2rem;
+  }
+
+  .hero-overlay p {
+    font-size: 1.2rem;
+  }
+
+  .gallery-item {
+    width: 48%;
+  }
+}
+
+@media (max-width: 480px) {
+  .ad-banner {
+    display: none;
+  }
+
+  .hero-image {
+    height: 70vh;
+  }
+
+  .hero-overlay h2 {
+    font-size: 1.5rem;
+  }
+
+  .hero-overlay p {
+    font-size: 1rem;
+  }
+
+  .gallery-item {
+    width: 100%;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+}
+
+.nav-list a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 14px;
+  padding: 5px 10px;
+  transition: all 0.3s ease;
+}
+
+.nav-list a.active {
+  background: var(--accent);
+  color: var(--dark);
+  border-radius: 3px;
+}
+
+.nav-list a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(78, 205, 196, 0.4);
+}
+
+/* Стили для динамических отзывов (Лаба 5) */
+.review-card {
+  border-bottom: 1px solid #eee;
+  padding: 15px 0;
+  margin-bottom: 15px;
+}
+
+.review-card:last-child {
+  border-bottom: none;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.review-date {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.review-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.review-actions button {
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.edit-btn {
+  background-color: var(--accent);
+  color: var(--dark);
+}
+
+.edit-btn:hover {
+  background-color: #3abcb3;
+}
+
+.delete-btn {
+  background-color: var(--secondary);
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #ff5252;
+}
+
+/* Стили для лабы 6 */
+.loader {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid var(--accent);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Cтилизация Swipper для лабы 7 */
+
+/* Обёртка слайдера — ограничиваем высоту и скрываем выход слайдов за края */
+.gallery-swiper {
+  width: 100%;
+  height: 400px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+/* Каждый слайд — относительное позиционирование для подписи */
+.gallery-swiper .swiper-slide {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  opacity: 0.5;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+/* Активный (центральный) слайд — полная непрозрачность и лёгкое увеличение */
+.gallery-swiper .swiper-slide-active {
+  opacity: 1;
+  transform: scale(1.03);
+}
+
+/* Изображение заполняет весь слайд */
+.gallery-swiper .swiper-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Подпись поверх слайда — градиентная плашка снизу */
+.slide-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  background: linear-gradient(transparent, rgba(26, 26, 46, 0.85));
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+/* Кнопки «назад» / «вперёд» — цвет из палитры проекта */
+.gallery-swiper .swiper-button-prev,
+.gallery-swiper .swiper-button-next {
+  color: var(--accent);
+  background: rgba(26, 26, 46, 0.6);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  backdrop-filter: blur(4px);
+}
+
+.gallery-swiper .swiper-button-prev:hover,
+.gallery-swiper .swiper-button-next:hover {
+  background: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .gallery-swiper {
+    height: 260px;
+  }
+}
+
+/* Trainers module UI */
+.section-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.trainer-add-btn {
+  width: auto;
+  text-decoration: none;
+}
+
+.trainer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.trainer-card {
+  border: 1px solid #e4e4e4;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.trainer-card-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.trainer-card-actions a {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.trainer-card-actions form {
+  margin: 0;
+}
+
+.trainer-card-actions .delete-btn {
+  border: none;
+}
+
+.trainer-detail-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+}
+
+.trainer-detail-actions .submit-btn {
+  width: auto;
+  text-decoration: none;
+}
+
+.trainer-form-back-link {
+  margin-top: 16px;
+}
+
+#trainer-toast-zone {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.trainer-toast {
+  background: #1f3c31;
+  color: #fff;
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 768px) {
+  .section-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .trainer-detail-actions {
+    flex-direction: column;
+  }
+}

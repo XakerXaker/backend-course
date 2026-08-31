@@ -1,0 +1,62 @@
+<main>
+  <section id="trainer-form-section">
+    <h2>{{formTitle}}</h2>
+
+    <form class="simple-form" method="post" action="{{formAction}}">
+      <div class="form-group">
+        <label for="name">Имя тренера</label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          value="{{trainer.name}}"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="specialization">Специализация</label>
+        <input
+          id="specialization"
+          name="specialization"
+          type="text"
+          value="{{trainer.specialization}}"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="experience">Опыт (в годах)</label>
+        <input
+          id="experience"
+          name="experience"
+          type="number"
+          min="0"
+          value="{{trainer.experience}}"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="photoUrl">URL фотографии</label>
+        <input
+          id="photoUrl"
+          name="photoUrl"
+          type="url"
+          value="{{trainer.photoUrl}}"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="bio">Описание</label>
+        <textarea id="bio" name="bio" rows="5">{{trainer.bio}}</textarea>
+      </div>
+
+      <button type="submit" class="submit-btn">{{submitLabel}}</button>
+    </form>
+
+    <p class="trainer-form-back-link">
+      <a href="/trainers?auth={{auth}}">Вернуться к списку</a>
+    </p>
+  </section>
+</main>
