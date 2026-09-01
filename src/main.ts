@@ -1,3 +1,10 @@
+// Должен быть первым импортом: подгружает .env в process.env ДО того, как
+// начнётся сборка модулей Nest — иначе PrismaClient (создаётся при
+// инициализации PrismaModule) не найдёт DATABASE_URL и упадёт с
+// PrismaClientInitializationError. На хостинге (Render) переменные и так
+// приходят из окружения, поэтому наличие/отсутствие .env там не влияет.
+import "dotenv/config";
+
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { NestExpressApplication } from "@nestjs/platform-express";
