@@ -43,7 +43,10 @@ export class MembershipsController {
       formAction: `/pricing?auth=${auth || "false"}`,
       submitLabel: "Создать",
       isEdit: false,
-      membership: { name: "", price: 0, duration: 1, features: [] },
+      // price/duration — пустая строка, а не число, иначе в
+      // <input type="number"> остаётся "0"/"1" и печатать приходится
+      // поверх него.
+      membership: { name: "", price: "", duration: "", features: [] },
     };
   }
 

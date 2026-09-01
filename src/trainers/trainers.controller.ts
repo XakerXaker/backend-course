@@ -56,7 +56,9 @@ export class TrainersController {
       trainer: {
         name: "",
         specialization: "",
-        experience: 0,
+        // Пустая строка, а не 0 — иначе в поле <input type="number">
+        // остаётся "0" и печатать приходится поверх него ("054" вместо "54").
+        experience: "",
         photoUrl: "",
         bio: "",
       },

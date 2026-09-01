@@ -44,7 +44,9 @@ export class ProductsController {
       submitLabel: "Создать",
       isEdit: false,
       categoryOptions: this.buildCategoryOptions(),
-      product: { name: "", category: "PROTEIN", price: 0, stock: 0, description: "" },
+      // price/stock — пустая строка, а не число, иначе в
+      // <input type="number"> остаётся "0" и печатать приходится поверх него.
+      product: { name: "", category: "PROTEIN", price: "", stock: "", description: "" },
     };
   }
 
