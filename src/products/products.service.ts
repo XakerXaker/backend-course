@@ -26,6 +26,25 @@ export class ProductsService {
     return this.prisma.product.findMany({ orderBy: { name: "asc" } });
   }
 
+  async findAllPaginated(page: number, limit: number) {
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(50, Math.max(1, limit));
+    const skip = (safePage - 1) * safeLimit;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.product.findMany({
+        skip,
+        take: safeLimit,
+        orderBy: { name: "asc" },
+      }),
+      this.prisma.product.count(),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
+    return { items, page: safePage, limit: safeLimit, total, totalPages };
+  }
+
   // Используется и на /nutrition (полная витрина), и на главной странице
   // (превью) — бизнес-логика группировки живёт в сервисе, а не в контроллере.
   async findCategorized(): Promise<ProductCategoryGroup[]> {

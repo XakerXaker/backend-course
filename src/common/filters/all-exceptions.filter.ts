@@ -73,6 +73,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
         };
       }
 
+      if (exception.code === "P2002") {
+        const target = (exception.meta?.target as string[] | undefined)?.join(", ");
+        return {
+          statusCode: HttpStatus.CONFLICT,
+          message: target
+            ? `Значение поля "${target}" уже занято`
+            : "Нарушено ограничение уникальности",
+        };
+      }
+
+      if (exception.code === "P2003") {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: "Указана несуществующая связанная сущность",
+        };
+      }
+
       return {
         statusCode: HttpStatus.BAD_REQUEST,
         message: "Ошибка уровня базы данных",

@@ -2,18 +2,16 @@
   "info": {
     "name": "PowerGit Gym - LR4 REST API",
     "_postman_id": "e6ad9f72-beb1-4304-8845-e7775d2d6564",
-    "description": "Коллекция для проверки REST API ЛР-4. Совместима с импортом в Postman и Insomnia.",
+    "description": "Коллекция для проверки REST API ЛР-4. Совместима с импортом в Postman и Insomnia. Покрывает все пять поддоменов (Trainers, Memberships, Products, Users, Reviews). Папки Memberships -> Users -> Reviews зависят друг от друга (используют переменные membershipId/userId), поэтому запускайте их по порядку сверху вниз; удаление связанных сущностей вынесено в папку Cleanup в конце.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3000"
-    },
-    {
-      "key": "trainerId",
-      "value": ""
-    }
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "trainerId", "value": "" },
+    { "key": "membershipId", "value": "" },
+    { "key": "productId", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "reviewId", "value": "" }
   ],
   "item": [
     {
@@ -29,14 +27,8 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "trainers"],
               "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                }
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
               ]
             },
             "description": "Проверка пагинации. В ответе ожидаются поля items/page/limit/total/totalPages и заголовок Link при наличии соседних страниц."
@@ -47,12 +39,7 @@
           "name": "Create Trainer",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Алексей Смирнов\",\n  \"specialization\": \"Функциональный тренинг\",\n  \"experience\": 7,\n  \"photoUrl\": \"https://example.com/images/alex-smirnov.jpg\",\n  \"bio\": \"Сертифицированный тренер, специализация: набор силы и выносливости.\"\n}"
@@ -101,12 +88,7 @@
           "name": "Update Trainer (PATCH)",
           "request": {
             "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"experience\": 8,\n  \"bio\": \"Обновленное описание тренера после ЛР-4.\"\n}"
@@ -149,12 +131,7 @@
           "name": "Validation Error Example (Bad Request)",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"A\",\n  \"specialization\": \"\",\n  \"experience\": -5\n}"
@@ -176,13 +153,579 @@
             "url": {
               "raw": "{{baseUrl}}/api/trainers/00000000-0000-0000-0000-000000000000",
               "host": ["{{baseUrl}}"],
-              "path": [
-                "api",
-                "trainers",
-                "00000000-0000-0000-0000-000000000000"
-              ]
+              "path": ["api", "trainers", "00000000-0000-0000-0000-000000000000"]
             },
             "description": "Демонстрация ожидаемого ответа 404 от сервиса/фильтра исключений."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Memberships API",
+      "item": [
+        {
+          "name": "Get Memberships (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/memberships?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "memberships"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Membership",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"VIP\",\n  \"price\": 5000,\n  \"duration\": 6,\n  \"features\": [\"24/7\", \"Персональные тренировки\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/memberships",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "memberships"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('membershipId', json.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get Membership By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/memberships/{{membershipId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "memberships", "{{membershipId}}"]
+            },
+            "description": "В ответе ожидается объект _count.users — сколько участников сейчас на абонементе."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Membership (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 5500\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/memberships/{{membershipId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "memberships", "{{membershipId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Members Of Membership (Nested Collection)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/memberships/{{membershipId}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "memberships", "{{membershipId}}", "users"]
+            },
+            "description": "Дочерняя коллекция: участники, оформившие этот абонемент. Запустите после создания пользователя в папке Users API."
+          },
+          "response": []
+        },
+        {
+          "name": "Validation Error Example (Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"X\",\n  \"price\": -100,\n  \"duration\": 0,\n  \"features\": \"не массив\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/memberships",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "memberships"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Not Found Example (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/memberships/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "memberships", "00000000-0000-0000-0000-000000000000"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products API",
+      "item": [
+        {
+          "name": "Get Products (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Сывороточный протеин\",\n  \"category\": \"PROTEIN\",\n  \"price\": 2200,\n  \"stock\": 25,\n  \"description\": \"900 г, быстроусвояемый\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('productId', json.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get Product By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"stock\": 50\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', function () { pm.response.to.have.status(204); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Validation Error Example (Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"X\",\n  \"category\": \"NOT_A_CATEGORY\",\n  \"price\": -1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            },
+            "description": "category не входит в enum Category — ожидается 400."
+          },
+          "response": []
+        },
+        {
+          "name": "Not Found Example (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "00000000-0000-0000-0000-000000000000"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users API",
+      "item": [
+        {
+          "name": "Get Users (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            },
+            "description": "Проверьте, что ни в одном элементе ответа нет поля passwordHash."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ivan@powergitgym.ru\",\n  \"password\": \"secret123\",\n  \"name\": \"Иван Иванов\",\n  \"phone\": \"+7 900 123-45-67\",\n  \"membershipId\": \"{{membershipId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            },
+            "description": "Требует заполненный membershipId (см. папку Memberships API). Можно оставить membershipId пустым — тогда участник будет без абонемента."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Response has no passwordHash', function () {",
+                  "  pm.expect(pm.response.text()).to.not.include('passwordHash');",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('userId', json.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get User By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"+7 999 000-00-00\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reviews Of User (Nested Collection)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}", "reviews"]
+            },
+            "description": "Запустите после создания отзыва в папке Reviews API (authorId = userId)."
+          },
+          "response": []
+        },
+        {
+          "name": "Conflict Example (409 Duplicate Email)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ivan@powergitgym.ru\",\n  \"password\": \"secret123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            },
+            "description": "Повторная регистрация того же email — ожидается 409 (нарушение уникальности User.email)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 409', function () { pm.response.to.have.status(409); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Validation Error Example (Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"not-an-email\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Not Found Example (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "00000000-0000-0000-0000-000000000000"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reviews API",
+      "item": [
+        {
+          "name": "Get Reviews (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authorName\": \"Иван Иванов\",\n  \"text\": \"Отличный зал, всем советую!\",\n  \"rating\": 5,\n  \"authorId\": \"{{userId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews"]
+            },
+            "description": "authorId необязателен — можно оставить пустым для гостевого отзыва."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('reviewId', json.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get Review By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "{{reviewId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Review (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"rating\": 4\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "{{reviewId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Validation Error Example (Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authorName\": \"A\",\n  \"text\": \"мало\",\n  \"rating\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews"]
+            },
+            "description": "rating вне диапазона 1-5, text короче минимума — ожидается 400."
+          },
+          "response": []
+        },
+        {
+          "name": "Not Found Example (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "00000000-0000-0000-0000-000000000000"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cleanup",
+      "item": [
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "{{reviewId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Membership",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/memberships/{{membershipId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "memberships", "{{membershipId}}"]
+            }
           },
           "response": []
         }

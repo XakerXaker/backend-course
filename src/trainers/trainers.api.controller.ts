@@ -23,9 +23,10 @@ import {
 } from "@nestjs/swagger";
 import { Request, Response } from "express";
 import { ApiErrorResponseDto } from "../common/dto/api-error-response.dto";
+import { PaginationQueryDto } from "../common/dto/pagination-query.dto";
+import { buildPaginationLinkHeader } from "../common/pagination.util";
 import { CreateTrainerDto } from "./dto/create-trainer.dto";
 import { PaginatedTrainersResponseDto } from "./dto/paginated-trainers-response.dto";
-import { PaginationQueryDto } from "./dto/pagination-query.dto";
 import { TrainerResponseDto } from "./dto/trainer-response.dto";
 import { UpdateTrainerDto } from "./dto/update-trainer.dto";
 import { TrainersService } from "./trainers.service";
@@ -56,7 +57,7 @@ export class TrainersApiController {
 
     const result = await this.trainersService.findAllPaginated(page, limit);
 
-    const linkHeader = this.buildPaginationLinkHeader(
+    const linkHeader = buildPaginationLinkHeader(
       request,
       result.page,
       result.limit,
@@ -129,33 +130,5 @@ export class TrainersApiController {
   })
   async remove(@Param("id", new ParseUUIDPipe()) id: string) {
     await this.trainersService.remove(id);
-  }
-
-  private buildPaginationLinkHeader(
-    request: Request,
-    page: number,
-    limit: number,
-    totalPages: number,
-  ): string | null {
-    const links: string[] = [];
-
-    if (page > 1) {
-      links.push(`<${this.makePageUrl(request, page - 1, limit)}>; rel="prev"`);
-    }
-
-    if (page < totalPages) {
-      links.push(`<${this.makePageUrl(request, page + 1, limit)}>; rel="next"`);
-    }
-
-    return links.length > 0 ? links.join(", ") : null;
-  }
-
-  private makePageUrl(request: Request, page: number, limit: number): string {
-    const baseUrl = `${request.protocol}://${request.get("host")}${request.baseUrl}`;
-    const url = new URL(baseUrl);
-    url.searchParams.set("page", String(page));
-    url.searchParams.set("limit", String(limit));
-
-    return url.toString();
   }
 }

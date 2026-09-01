@@ -56,6 +56,10 @@ async function bootstrap() {
     .setDescription("REST API для управления сущностями PowerGit Gym")
     .setVersion("1.0")
     .addTag("Trainers API", "Операции с тренерами")
+    .addTag("Memberships API", "Операции с абонементами и их участниками")
+    .addTag("Products API", "Операции с товарами спортивного питания")
+    .addTag("Users API", "Операции с зарегистрированными участниками и их отзывами")
+    .addTag("Reviews API", "Операции с отзывами")
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup("api/docs", app, document, {
