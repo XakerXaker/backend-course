@@ -39,11 +39,9 @@
     <section id="reviews">
         <h2>Отзывы наших клиентов</h2>
         {{#each reviews}}
-        <article>
-            <h3>{{this.author}}</h3>
-            <p>"{{this.text}}"</p>
-        </article>
+        {{> review-card this}}
         {{/each}}
+        <p><a href="/reviews?auth={{auth}}">Все отзывы →</a></p>
     </section>
 
     <section id="nutrition">

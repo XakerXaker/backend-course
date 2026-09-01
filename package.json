@@ -2,7 +2,10 @@
   "name": "powergit-gym-backend",
   "version": "1.0.0",
   "description": "PowerGit Gym — серверная часть приложения на NestJS с шаблонизацией Handlebars",
-  "author": "Darmanov",
+  "author": {
+    "name": "Darmanov Khantemir",
+    "email": "darmanovhantemir@gmail.com"
+  },
   "private": true,
   "license": "UNLICENSED",
   "engines": {

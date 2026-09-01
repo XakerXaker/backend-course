@@ -1,0 +1,60 @@
+<main>
+    <section id="reviews-list-section">
+        <div class="section-toolbar">
+            <h2>Отзывы наших клиентов</h2>
+            <a class="submit-btn" href="/reviews/add?auth={{auth}}">Оставить отзыв</a>
+        </div>
+
+        {{#if reviews.length}}
+        <div class="reviews-grid">
+            {{#each reviews}}
+            <article class="review-card">
+                <div class="review-header">
+                    <h3>{{authorName}}</h3>
+                    <span class="review-date">{{formatDate createdAt}}</span>
+                </div>
+                <p>"{{text}}"</p>
+                <p class="review-rating">Оценка: {{rating}}/5</p>
+
+                <div class="review-actions">
+                    <a href="/reviews/{{id}}/edit?auth={{../auth}}">Редактировать</a>
+                    <form method="post" action="/reviews/{{id}}/delete?auth={{../auth}}">
+                        <button type="submit" class="delete-btn">Удалить</button>
+                    </form>
+                </div>
+            </article>
+            {{/each}}
+        </div>
+        {{else}}
+        <p id="no-reviews-msg">Пока нет отзывов. Будьте первым!</p>
+        {{/if}}
+    </section>
+
+    <section id="external-reviews-section" style="margin-top: 40px;">
+        <h2>Отзывы из сети</h2>
+        <p style="margin-bottom: 15px; color: #666;">Здесь подгружаются случайные комментарии через Fetch API.</p>
+
+        <button id="load-external-btn" class="submit-btn" style="margin-bottom: 20px; width: auto;">Загрузить другие
+            отзывы</button>
+
+        <div id="fetch-error-msg"
+            style="display: none; background: #ffebee; color: #c62828; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: bold;">
+        </div>
+
+        <div id="preloader" class="loader" style="display: none;"></div>
+
+        <div id="external-reviews-container"></div>
+    </section>
+
+    <template id="external-review-template">
+        <article class="review-card">
+            <div class="review-header">
+                <h3 class="review-author"></h3>
+                <span class="review-date"></span>
+            </div>
+            <p class="review-content"></p>
+        </article>
+    </template>
+
+    <script src="/js/fetch-data.js" defer></script>
+</main>

@@ -1,0 +1,42 @@
+<main>
+  <section id="review-form-section">
+    <h2>{{formTitle}}</h2>
+
+    <form class="simple-form" method="post" action="{{formAction}}">
+      <div class="form-group">
+        <label for="authorName">Ваше имя</label>
+        <input
+          id="authorName"
+          name="authorName"
+          type="text"
+          value="{{review.authorName}}"
+          minlength="2"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="text">Ваш отзыв</label>
+        <textarea id="text" name="text" rows="4" minlength="5" required>{{review.text}}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="rating">Оценка (1-5)</label>
+        <input
+          id="rating"
+          name="rating"
+          type="number"
+          min="1"
+          max="5"
+          value="{{review.rating}}"
+        />
+      </div>
+
+      <button type="submit" class="submit-btn">{{submitLabel}}</button>
+    </form>
+
+    <p class="trainer-form-back-link">
+      <a href="/reviews?auth={{auth}}">Вернуться к списку отзывов</a>
+    </p>
+  </section>
+</main>

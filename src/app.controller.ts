@@ -1,9 +1,13 @@
 import { Controller, Get, Query, Render } from "@nestjs/common";
+import { ReviewsService } from "./reviews/reviews.service";
 import { TrainersService } from "./trainers/trainers.service";
 
 @Controller()
 export class AppController {
-  constructor(private readonly trainersService: TrainersService) {}
+  constructor(
+    private readonly trainersService: TrainersService,
+    private readonly reviewsService: ReviewsService,
+  ) {}
 
   private pricing = [
     {
@@ -75,17 +79,6 @@ export class AppController {
     ],
   };
 
-  private reviews = [
-    {
-      author: "Иван, 28 лет",
-      text: "За 6 месяцев тренировок сбросил 18 кг! Тренеры профессионалы!",
-    },
-    {
-      author: "Екатерина, 32 года",
-      text: "Никогда не думала, что полюблю спорт. Спасибо команде PowerGit за мотивацию!",
-    },
-  ];
-
   private getUser(auth: string) {
     if (auth === "true") {
       return { name: "Иван Иванов", email: "ivan@powergitgym.ru" };
@@ -97,6 +90,7 @@ export class AppController {
   @Render("index")
   async getIndexPage(@Query("auth") auth: string) {
     const trainers = await this.trainersService.findAll();
+    const reviews = await this.reviewsService.findAll(3);
 
     return {
       title: "PowerGit Gym - Сила воли твой результат",
@@ -104,7 +98,7 @@ export class AppController {
       user: this.getUser(auth),
       auth,
       trainers,
-      reviews: this.reviews,
+      reviews,
       products: this.products,
       pricing: this.pricing,
       membership: this.membership,
@@ -117,17 +111,6 @@ export class AppController {
     return {
       title: "О нас - PowerGit Gym",
       activePage: "about",
-      user: this.getUser(auth),
-      auth,
-    };
-  }
-
-  @Get("reviews")
-  @Render("reviews")
-  getReviewsPage(@Query("auth") auth: string) {
-    return {
-      title: "Отзывы - PowerGit Gym",
-      activePage: "reviews",
       user: this.getUser(auth),
       auth,
     };

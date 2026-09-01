@@ -63,6 +63,13 @@ export class TrainersController {
     };
   }
 
+  // Должен быть объявлен до "@Get(':id')", иначе Express/Nest сопоставит
+  // GET /trainers/events с параметром :id="events" и вернёт 404.
+  @Sse("events")
+  events(): Observable<MessageEvent> {
+    return this.trainersService.getEvents();
+  }
+
   @Get(":id")
   @Render("trainers/detail")
   async getEntityPage(@Param("id") id: string, @Query("auth") auth: string) {
@@ -127,10 +134,5 @@ export class TrainersController {
     await this.trainersService.remove(id);
 
     return res.redirect(`/trainers?auth=${auth || "false"}`);
-  }
-
-  @Sse("events")
-  events(): Observable<MessageEvent> {
-    return this.trainersService.getEvents();
   }
 }
