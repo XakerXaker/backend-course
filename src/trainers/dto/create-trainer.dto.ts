@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
   IsInt,
   IsOptional,
@@ -47,9 +47,13 @@ export class CreateTrainerDto {
     description: "Ссылка на фото",
     example: "https://example.com/images/trainer.jpg",
   })
+  // Пустая строка из HTML-формы (поле оставили незаполненным) — не то же
+  // самое, что "поле не передано": без этого @IsUrl() отвергал бы её как
+  // невалидный URL, и создать тренера без фото через форму было нельзя.
   @IsOptional()
+  @Transform(({ value }) => (value === "" ? null : value))
   @IsUrl({ require_tld: false })
-  photoUrl?: string;
+  photoUrl?: string | null;
 
   @ApiPropertyOptional({
     description: "Краткая биография",

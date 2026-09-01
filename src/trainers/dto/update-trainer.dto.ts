@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
   IsInt,
   IsOptional,
@@ -50,9 +50,12 @@ export class UpdateTrainerDto {
     description: "Ссылка на фото",
     example: "https://example.com/images/trainer.jpg",
   })
+  // Пустая строка → null, а не undefined: так форма редактирования может
+  // явно очистить URL фото (сервис пропускает поле только при undefined).
   @IsOptional()
+  @Transform(({ value }) => (value === "" ? null : value))
   @IsUrl({ require_tld: false })
-  photoUrl?: string;
+  photoUrl?: string | null;
 
   @ApiPropertyOptional({
     description: "Краткая биография",
