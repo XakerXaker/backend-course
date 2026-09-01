@@ -1,9 +1,6 @@
 <main>
     <section id="users-list-section">
-        <div class="section-toolbar">
-            <h2>Участники клуба</h2>
-            <a class="submit-btn" href="/users/add?auth={{auth}}">Зарегистрировать участника</a>
-        </div>
+        <h2>Участники клуба</h2>
 
         {{#if users.length}}
         <div class="table-container">
@@ -40,5 +37,9 @@
         {{else}}
         <p>Пока нет зарегистрированных участников.</p>
         {{/if}}
+
+        <div class="section-footer-actions">
+            <a class="submit-btn section-add-btn" href="/users/add?auth={{auth}}">Зарегистрировать участника</a>
+        </div>
     </section>
 </main>

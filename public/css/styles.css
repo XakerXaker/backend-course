@@ -532,17 +532,20 @@ footer {
 }
 
 /* Trainers module UI */
-.section-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
+
+/* Кнопка "Добавить..." — переопределяем .submit-btn (width: 100%,
+   рассчитан на форму), иначе она растягивается на всю ширину секции. */
+.section-add-btn {
+  width: auto;
+  display: inline-block;
+  text-decoration: none;
 }
 
-.trainer-add-btn {
-  width: auto;
-  text-decoration: none;
+/* Кнопка добавления живёт под списком/таблицей, а не в шапке секции —
+   так она не спорит по цвету с остальными элементами страницы. */
+.section-footer-actions {
+  margin-top: 20px;
+  text-align: center;
 }
 
 .trainer-grid {
@@ -610,11 +613,6 @@ footer {
 }
 
 @media (max-width: 768px) {
-  .section-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
   .trainer-detail-actions {
     flex-direction: column;
   }

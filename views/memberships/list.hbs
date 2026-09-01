@@ -1,9 +1,6 @@
 <main>
     <section id="pricing">
-        <div class="section-toolbar">
-            <h2>Тарифные планы и абонементы</h2>
-            <a class="submit-btn" href="/pricing/add?auth={{auth}}">Добавить абонемент</a>
-        </div>
+        <h2>Тарифные планы и абонементы</h2>
 
         {{#if memberships.length}}
         <div class="table-container">
@@ -48,5 +45,9 @@
         {{else}}
         <p>Пока нет абонементов. Добавьте первый через форму.</p>
         {{/if}}
+
+        <div class="section-footer-actions">
+            <a class="submit-btn section-add-btn" href="/pricing/add?auth={{auth}}">Добавить абонемент</a>
+        </div>
     </section>
 </main>
