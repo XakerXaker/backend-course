@@ -410,34 +410,28 @@ footer {
 .review-actions {
   margin-top: 10px;
   display: flex;
+  align-items: center;
   gap: 10px;
 }
 
-.review-actions button {
-  border: none;
-  padding: 5px 10px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: 0.3s;
-}
-
-.edit-btn {
-  background-color: var(--accent);
-  color: var(--dark);
-}
-
-.edit-btn:hover {
-  background-color: #3abcb3;
-}
-
+/* "Удалить" — такая же по виду и расположению ссылка-действие, как
+   "Редактировать"/"Изменить" рядом с ней (подчёркнутый текст, а не
+   заливная кнопка), только в предупреждающем цвете. */
 .delete-btn {
-  background-color: var(--secondary);
-  color: white;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--secondary);
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
 }
 
 .delete-btn:hover {
-  background-color: #ff5252;
+  color: #d64545;
 }
 
 /* Стили для лабы 6 */
@@ -576,10 +570,6 @@ footer {
 
 .trainer-card-actions form {
   margin: 0;
-}
-
-.trainer-card-actions .delete-btn {
-  border: none;
 }
 
 .trainer-detail-actions {
