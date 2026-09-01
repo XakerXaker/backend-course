@@ -1,9 +1,6 @@
 <main>
     <section id="reviews-list-section">
-        <div class="section-toolbar">
-            <h2>Отзывы наших клиентов</h2>
-            <a class="submit-btn" href="/reviews/add?auth={{auth}}">Оставить отзыв</a>
-        </div>
+        <h2>Отзывы наших клиентов</h2>
 
         {{#if reviews.length}}
         <div class="reviews-grid">
@@ -34,6 +31,10 @@
         {{else}}
         <p id="no-reviews-msg">Пока нет отзывов. Будьте первым!</p>
         {{/if}}
+
+        <div class="section-footer-actions">
+            <a class="submit-btn section-add-btn" href="/reviews/add?auth={{auth}}">Оставить отзыв</a>
+        </div>
     </section>
 
     <section id="external-reviews-section" style="margin-top: 40px;">

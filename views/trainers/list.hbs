@@ -1,9 +1,6 @@
 <main>
     <section id="trainers">
-        <div class="section-toolbar">
-            <h2>Наша команда тренеров</h2>
-            <a class="submit-btn trainer-add-btn" href="/trainers/add?auth={{auth}}">Добавить тренера</a>
-        </div>
+        <h2>Наша команда тренеров</h2>
 
         <div id="trainer-toast-zone" aria-live="polite" aria-atomic="true"></div>
 
@@ -29,6 +26,10 @@
         {{else}}
         <p>Пока нет тренеров. Добавьте первого через форму.</p>
         {{/if}}
+
+        <div class="section-footer-actions">
+            <a class="submit-btn section-add-btn" href="/trainers/add?auth={{auth}}">Добавить тренера</a>
+        </div>
     </section>
 </main>
 

@@ -1,9 +1,6 @@
 <main>
     <section id="nutrition">
-        <div class="section-toolbar">
-            <h2>Спортивное питание</h2>
-            <a class="submit-btn" href="/nutrition/add?auth={{auth}}">Добавить товар</a>
-        </div>
+        <h2>Спортивное питание</h2>
 
         {{#each categories}}
         <article class="product-category">
@@ -36,5 +33,9 @@
             {{/if}}
         </article>
         {{/each}}
+
+        <div class="section-footer-actions">
+            <a class="submit-btn section-add-btn" href="/nutrition/add?auth={{auth}}">Добавить товар</a>
+        </div>
     </section>
 </main>
