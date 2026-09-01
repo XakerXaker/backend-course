@@ -47,6 +47,10 @@ async function bootstrap() {
     return a === b;
   });
 
+  hbs.registerHelper("formatDate", function (date: Date | string) {
+    return new Date(date).toLocaleDateString("ru-RU");
+  });
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle("PowerGit Gym API")
     .setDescription("REST API для управления сущностями PowerGit Gym")
@@ -61,8 +65,9 @@ async function bootstrap() {
     },
   });
 
-  // Порт 3000 по умолчанию
-  const port = 3000;
+  // Хостинг (например, Render) передаёт порт через переменную окружения PORT.
+  // Локально, если она не задана, используем 3000 по умолчанию.
+  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
   await app.listen(port);
 
   console.log(`Application is running on: http://localhost:${port}`);

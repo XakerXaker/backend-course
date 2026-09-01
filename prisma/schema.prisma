@@ -48,14 +48,16 @@ model Membership {
 }
 
 model Review {
-  id        String   @id @default(uuid())
-  text      String
-  rating    Int      @default(5)
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  authorName String // Имя автора на момент публикации отзыва
+  text       String
+  rating     Int      @default(5)
+  createdAt  DateTime @default(now())
 
-  // Связи
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  // Связи. Отзыв можно оставить и без учётной записи (гостевой отзыв),
+  // поэтому связь с User необязательная.
+  authorId   String?
+  author     User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
 }
 
 model Product {
