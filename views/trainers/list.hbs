@@ -5,9 +5,9 @@
         <div id="trainer-toast-zone" aria-live="polite" aria-atomic="true"></div>
 
         {{#if trainers.length}}
-        <div class="trainer-grid">
+        <div class="trainer-grid" id="trainer-grid">
             {{#each trainers}}
-            <article class="trainer-card">
+            <article class="trainer-card" data-trainer-id="{{id}}">
                 <h3>{{name}}</h3>
                 <p><strong>Стаж:</strong> {{experience}} лет</p>
                 <p><strong>Специализация:</strong> {{specialization}}</p>
@@ -24,7 +24,7 @@
             {{/each}}
         </div>
         {{else}}
-        <p>Пока нет тренеров. Добавьте первого через форму.</p>
+        <p id="no-trainers-message">Пока нет тренеров. Добавьте первого через форму.</p>
         {{/if}}
 
         <div class="section-footer-actions">
