@@ -1,0 +1,33 @@
+<main>
+  <section id="membership-form-section">
+    <h2>{{formTitle}}</h2>
+
+    <form class="simple-form" method="post" action="{{formAction}}">
+      <div class="form-group">
+        <label for="name">Название абонемента</label>
+        <input id="name" name="name" type="text" value="{{membership.name}}" required />
+      </div>
+
+      <div class="form-group">
+        <label for="price">Цена, ₽</label>
+        <input id="price" name="price" type="number" min="0" step="1" value="{{membership.price}}" required />
+      </div>
+
+      <div class="form-group">
+        <label for="duration">Срок действия, мес.</label>
+        <input id="duration" name="duration" type="number" min="1" value="{{membership.duration}}" required />
+      </div>
+
+      <div class="form-group">
+        <label for="features">Преимущества (по одному в строке)</label>
+        <textarea id="features" name="features" rows="4">{{membership.features}}</textarea>
+      </div>
+
+      <button type="submit" class="submit-btn">{{submitLabel}}</button>
+    </form>
+
+    <p class="trainer-form-back-link">
+      <a href="/pricing?auth={{auth}}">Вернуться к списку абонементов</a>
+    </p>
+  </section>
+</main>

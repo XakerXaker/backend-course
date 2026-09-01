@@ -16,6 +16,16 @@
       </div>
 
       <div class="form-group">
+        <label for="authorId">От имени зарегистрированного участника (необязательно)</label>
+        <select id="authorId" name="authorId">
+          <option value="">Гость (не привязывать к аккаунту)</option>
+          {{#each authorOptions}}
+          <option value="{{id}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="form-group">
         <label for="text">Ваш отзыв</label>
         <textarea id="text" name="text" rows="4" minlength="5" required>{{review.text}}</textarea>
       </div>

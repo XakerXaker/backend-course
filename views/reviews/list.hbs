@@ -10,7 +10,13 @@
             {{#each reviews}}
             <article class="review-card">
                 <div class="review-header">
-                    <h3>{{authorName}}</h3>
+                    <h3>
+                        {{#if author}}
+                        <a href="/users/{{author.id}}?auth={{../auth}}">{{authorName}}</a>
+                        {{else}}
+                        {{authorName}}
+                        {{/if}}
+                    </h3>
                     <span class="review-date">{{formatDate createdAt}}</span>
                 </div>
                 <p>"{{text}}"</p>

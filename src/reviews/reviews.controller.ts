@@ -1,12 +1,18 @@
 import { Body, Controller, Get, Param, Post, Query, Render, Res } from "@nestjs/common";
 import { Response } from "express";
+import { UsersService } from "../users/users.service";
 import { CreateReviewDto } from "./dto/create-review.dto";
 import { UpdateReviewDto } from "./dto/update-review.dto";
 import { ReviewsService } from "./reviews.service";
 
 @Controller("reviews")
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(
+    private readonly reviewsService: ReviewsService,
+    // Связь Review -> User: форма отзыва предлагает выбрать существующего
+    // зарегистрированного участника вместо (или вместе с) свободного имени.
+    private readonly usersService: UsersService,
+  ) {}
 
   private getUser(auth: string) {
     if (auth === "true") {
@@ -31,7 +37,7 @@ export class ReviewsController {
 
   @Get("add")
   @Render("reviews/form")
-  getCreatePage(@Query("auth") auth: string) {
+  async getCreatePage(@Query("auth") auth: string) {
     return {
       title: "Оставить отзыв - PowerGit Gym",
       activePage: "reviews",
@@ -41,6 +47,7 @@ export class ReviewsController {
       formAction: `/reviews?auth=${auth || "false"}`,
       submitLabel: "Опубликовать",
       isEdit: false,
+      authorOptions: await this.buildAuthorOptions(),
       review: { authorName: "", text: "", rating: 5 },
     };
   }
@@ -59,6 +66,7 @@ export class ReviewsController {
       formAction: `/reviews/${id}/edit?auth=${auth || "false"}`,
       submitLabel: "Сохранить",
       isEdit: true,
+      authorOptions: await this.buildAuthorOptions(review.authorId),
       review,
     };
   }
@@ -95,5 +103,15 @@ export class ReviewsController {
     await this.reviewsService.remove(id);
 
     return res.redirect(`/reviews?auth=${auth || "false"}`);
+  }
+
+  private async buildAuthorOptions(selectedId?: string | null) {
+    const users = await this.usersService.findAll();
+
+    return users.map((registeredUser) => ({
+      id: registeredUser.id,
+      label: registeredUser.name ?? registeredUser.email,
+      selected: registeredUser.id === selectedId,
+    }));
   }
 }
