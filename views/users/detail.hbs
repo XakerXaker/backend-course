@@ -1,0 +1,39 @@
+<main>
+  <section id="user-detail">
+    <h2>{{#if member.name}}{{member.name}}{{else}}{{member.email}}{{/if}}</h2>
+    <p><strong>Email:</strong> {{member.email}}</p>
+    {{#if member.phone}}
+    <p><strong>Телефон:</strong> {{member.phone}}</p>
+    {{/if}}
+    <p><strong>Дата регистрации:</strong> {{formatDate member.createdAt}}</p>
+
+    <h3>Абонемент</h3>
+    {{#if member.membership}}
+    <p>{{member.membership.name}} — {{member.membership.price}} ₽ / {{member.membership.duration}} мес.</p>
+    {{else}}
+    <p>Абонемент не оформлен.</p>
+    {{/if}}
+
+    <h3>Отзывы участника</h3>
+    {{#if member.reviews.length}}
+    <div class="reviews-grid">
+      {{#each member.reviews}}
+      <article class="review-card">
+        <div class="review-header">
+          <span class="review-date">{{formatDate createdAt}}</span>
+        </div>
+        <p>"{{text}}"</p>
+        <p class="review-rating">Оценка: {{rating}}/5</p>
+      </article>
+      {{/each}}
+    </div>
+    {{else}}
+    <p>Участник пока не оставлял отзывов.</p>
+    {{/if}}
+
+    <div class="trainer-detail-actions">
+      <a class="submit-btn" href="/users/{{member.id}}/edit?auth={{auth}}">Редактировать</a>
+      <a class="submit-btn" href="/users?auth={{auth}}">К списку</a>
+    </div>
+  </section>
+</main>

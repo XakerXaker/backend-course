@@ -1,0 +1,40 @@
+<main>
+    <section id="nutrition">
+        <div class="section-toolbar">
+            <h2>Спортивное питание</h2>
+            <a class="submit-btn" href="/nutrition/add?auth={{auth}}">Добавить товар</a>
+        </div>
+
+        {{#each categories}}
+        <article class="product-category">
+            <h3>{{label}}</h3>
+
+            {{#if products.length}}
+            <div class="product-grid">
+                {{#each products}}
+                <div class="product-card">
+                    <div class="review-header">
+                        <strong>{{name}}</strong>
+                        <span class="review-date">{{price}} ₽</span>
+                    </div>
+                    {{#if description}}
+                    <p>{{description}}</p>
+                    {{/if}}
+                    <p class="review-rating">В наличии: {{stock}} шт.</p>
+
+                    <div class="review-actions">
+                        <a href="/nutrition/{{id}}/edit?auth={{../../auth}}">Редактировать</a>
+                        <form method="post" action="/nutrition/{{id}}/delete?auth={{../../auth}}">
+                            <button type="submit" class="delete-btn">Удалить</button>
+                        </form>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+            {{else}}
+            <p>Пока нет товаров в этой категории.</p>
+            {{/if}}
+        </article>
+        {{/each}}
+    </section>
+</main>

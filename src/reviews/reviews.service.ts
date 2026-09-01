@@ -8,14 +8,20 @@ export class ReviewsService {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll(take?: number) {
+    // include: author — необязательная связь Review -> User: если отзыв
+    // оставлен от имени зарегистрированного участника, подтягиваем его.
     return this.prisma.review.findMany({
       orderBy: { createdAt: "desc" },
+      include: { author: true },
       ...(take ? { take } : {}),
     });
   }
 
   async findOne(id: string) {
-    const review = await this.prisma.review.findUnique({ where: { id } });
+    const review = await this.prisma.review.findUnique({
+      where: { id },
+      include: { author: true },
+    });
 
     if (!review) {
       throw new NotFoundException("Отзыв не найден");
@@ -30,6 +36,7 @@ export class ReviewsService {
         authorName: createReviewDto.authorName,
         text: createReviewDto.text,
         rating: createReviewDto.rating ?? 5,
+        authorId: createReviewDto.authorId ?? null,
       },
     });
   }
@@ -46,6 +53,9 @@ export class ReviewsService {
         ...(updateReviewDto.text !== undefined && { text: updateReviewDto.text }),
         ...(updateReviewDto.rating !== undefined && {
           rating: updateReviewDto.rating,
+        }),
+        ...(updateReviewDto.authorId !== undefined && {
+          authorId: updateReviewDto.authorId,
         }),
       },
     });

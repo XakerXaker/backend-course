@@ -1,0 +1,43 @@
+<main>
+  <section id="user-form-section">
+    <h2>{{formTitle}}</h2>
+
+    <form class="simple-form" method="post" action="{{formAction}}">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" value="{{member.email}}" required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">{{#if isEdit}}Новый пароль (необязательно){{else}}Пароль{{/if}}</label>
+        <input id="password" name="password" type="password" minlength="6" {{#unless isEdit}}required{{/unless}} />
+      </div>
+
+      <div class="form-group">
+        <label for="name">Имя</label>
+        <input id="name" name="name" type="text" value="{{member.name}}" />
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Телефон</label>
+        <input id="phone" name="phone" type="tel" value="{{member.phone}}" />
+      </div>
+
+      <div class="form-group">
+        <label for="membershipId">Абонемент</label>
+        <select id="membershipId" name="membershipId">
+          <option value="">Без абонемента</option>
+          {{#each membershipOptions}}
+          <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <button type="submit" class="submit-btn">{{submitLabel}}</button>
+    </form>
+
+    <p class="trainer-form-back-link">
+      <a href="/users?auth={{auth}}">Вернуться к списку участников</a>
+    </p>
+  </section>
+</main>

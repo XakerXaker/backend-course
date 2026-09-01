@@ -1,0 +1,42 @@
+<main>
+  <section id="product-form-section">
+    <h2>{{formTitle}}</h2>
+
+    <form class="simple-form" method="post" action="{{formAction}}">
+      <div class="form-group">
+        <label for="name">Название товара</label>
+        <input id="name" name="name" type="text" value="{{product.name}}" required />
+      </div>
+
+      <div class="form-group">
+        <label for="category">Категория</label>
+        <select id="category" name="category" required>
+          {{#each categoryOptions}}
+          <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="price">Цена, ₽</label>
+        <input id="price" name="price" type="number" min="0" step="1" value="{{product.price}}" required />
+      </div>
+
+      <div class="form-group">
+        <label for="stock">Остаток на складе, шт.</label>
+        <input id="stock" name="stock" type="number" min="0" value="{{product.stock}}" />
+      </div>
+
+      <div class="form-group">
+        <label for="description">Описание</label>
+        <textarea id="description" name="description" rows="3">{{product.description}}</textarea>
+      </div>
+
+      <button type="submit" class="submit-btn">{{submitLabel}}</button>
+    </form>
+
+    <p class="trainer-form-back-link">
+      <a href="/nutrition?auth={{auth}}">Вернуться к ассортименту</a>
+    </p>
+  </section>
+</main>

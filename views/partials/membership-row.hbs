@@ -1,7 +1,13 @@
 <tr>
-    <td><strong>{{type}}</strong></td>
-    <td>{{period}}</td>
-    <td>{{price}}</td>
-    <td>{{benefits}}</td>
-    <td>{{promo}}</td>
+    <td><strong>{{name}}</strong></td>
+    <td>{{price}} ₽</td>
+    <td>{{duration}} мес.</td>
+    <td>
+        <ul class="membership-features">
+            {{#each features}}
+            <li>{{this}}</li>
+            {{/each}}
+        </ul>
+    </td>
+    <td>{{_count.users}}</td>
 </tr>

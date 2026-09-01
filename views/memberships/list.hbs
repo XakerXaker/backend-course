@@ -1,0 +1,52 @@
+<main>
+    <section id="pricing">
+        <div class="section-toolbar">
+            <h2>Тарифные планы и абонементы</h2>
+            <a class="submit-btn" href="/pricing/add?auth={{auth}}">Добавить абонемент</a>
+        </div>
+
+        {{#if memberships.length}}
+        <div class="table-container">
+            <table class="membership-table">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Цена</th>
+                        <th>Срок</th>
+                        <th>Преимущества</th>
+                        <th>Участников</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each memberships}}
+                    <tr>
+                        <td><strong>{{name}}</strong></td>
+                        <td>{{price}} ₽</td>
+                        <td>{{duration}} мес.</td>
+                        <td>
+                            <ul class="membership-features">
+                                {{#each features}}
+                                <li>{{this}}</li>
+                                {{/each}}
+                            </ul>
+                        </td>
+                        <td>{{_count.users}}</td>
+                        <td>
+                            <div class="review-actions">
+                                <a href="/pricing/{{id}}/edit?auth={{../auth}}">Редактировать</a>
+                                <form method="post" action="/pricing/{{id}}/delete?auth={{../auth}}">
+                                    <button type="submit" class="delete-btn">Удалить</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <p>Пока нет абонементов. Добавьте первый через форму.</p>
+        {{/if}}
+    </section>
+</main>

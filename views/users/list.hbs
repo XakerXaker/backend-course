@@ -1,0 +1,44 @@
+<main>
+    <section id="users-list-section">
+        <div class="section-toolbar">
+            <h2>Участники клуба</h2>
+            <a class="submit-btn" href="/users/add?auth={{auth}}">Зарегистрировать участника</a>
+        </div>
+
+        {{#if users.length}}
+        <div class="table-container">
+            <table class="membership-table">
+                <thead>
+                    <tr>
+                        <th>Имя</th>
+                        <th>Email</th>
+                        <th>Абонемент</th>
+                        <th>Дата регистрации</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each users}}
+                    <tr>
+                        <td><a href="/users/{{id}}?auth={{../auth}}">{{#if name}}{{name}}{{else}}—{{/if}}</a></td>
+                        <td>{{email}}</td>
+                        <td>{{#if membership}}{{membership.name}}{{else}}Без абонемента{{/if}}</td>
+                        <td>{{formatDate createdAt}}</td>
+                        <td>
+                            <div class="review-actions">
+                                <a href="/users/{{id}}/edit?auth={{../auth}}">Редактировать</a>
+                                <form method="post" action="/users/{{id}}/delete?auth={{../auth}}">
+                                    <button type="submit" class="delete-btn">Удалить</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <p>Пока нет зарегистрированных участников.</p>
+        {{/if}}
+    </section>
+</main>

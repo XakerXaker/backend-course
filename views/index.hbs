@@ -68,38 +68,16 @@
         <article>
             <h3>Наш ассортимент</h3>
             <ul>
+                {{#each categories}}
                 <li>
-                    <strong>Протеины</strong>
+                    <strong>{{label}}</strong>
                     <ul>
-                        {{#each products.proteins}}
-                        <li>{{this.name}} - {{this.price}}</li>
+                        {{#each products}}
+                        <li>{{this.name}} - {{this.price}} ₽</li>
                         {{/each}}
                     </ul>
                 </li>
-                <li>
-                    <strong>Аминокислоты</strong>
-                    <ul>
-                        {{#each products.amino}}
-                        <li>{{this.name}} - {{this.price}}</li>
-                        {{/each}}
-                    </ul>
-                </li>
-                <li>
-                    <strong>Жиросжигатели</strong>
-                    <ul>
-                        {{#each products.fatburners}}
-                        <li>{{this.name}} - {{this.price}}</li>
-                        {{/each}}
-                    </ul>
-                </li>
-                <li>
-                    <strong>Витамины и минералы</strong>
-                    <ul>
-                        {{#each products.vitamins}}
-                        <li>{{this.name}} - {{this.price}}</li>
-                        {{/each}}
-                    </ul>
-                </li>
+                {{/each}}
             </ul>
 
             <aside>
@@ -107,6 +85,8 @@
                 <p>При покупке протеина и BCAA вместе - <del>3500 руб</del> <ins>3000 руб</ins>!</p>
                 <p><em>Предложение действует до конца месяца</em></p>
             </aside>
+
+            <p><a href="/nutrition?auth={{auth}}">Весь ассортимент и управление товарами →</a></p>
         </article>
     </section>
 
@@ -128,21 +108,26 @@
     </section>
 
     <section id="pricing">
-        <h2>Тарифные планы</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Тариф</th>
-                    <th>Цена</th>
-                    <th>Возможности</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each pricing}}
-                {{> pricing-row this}}
-                {{/each}}
-            </tbody>
-        </table>
+        <h2>Тарифные планы и абонементы</h2>
+        <div class="table-container">
+            <table class="membership-table">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Цена</th>
+                        <th>Срок</th>
+                        <th>Преимущества</th>
+                        <th>Участников</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each memberships}}
+                    {{> membership-row this}}
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        <p><a href="/pricing?auth={{auth}}">Управление абонементами →</a></p>
     </section>
 
     <section id="contact">
@@ -212,28 +197,6 @@
 
         <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
         <script src="/js/gallery.js"></script>
-    </section>
-
-    <section id="membership">
-        <h2>Таблица членства в клубе</h2>
-        <div class="table-container">
-            <table class="membership-table">
-                <thead>
-                    <tr>
-                        <th>Тип членства</th>
-                        <th>Срок</th>
-                        <th>Цена</th>
-                        <th>Преимущества</th>
-                        <th>Акции</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each membership}}
-                    {{> membership-row this}}
-                    {{/each}}
-                </tbody>
-            </table>
-        </div>
     </section>
 
     <div class="ad-banner">
