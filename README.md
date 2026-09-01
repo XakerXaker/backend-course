@@ -74,11 +74,11 @@ src/
 ├── app.module.ts
 ├── common/                # общие DTO и глобальный exception filter
 ├── prisma/                # инфраструктурный слой доступа к БД (PrismaService/PrismaModule)
-├── trainers/               # поддомен "Тренеры" ("/trainers"): entity, dto, service, MVC-контроллер, REST API-контроллер, SSE
-├── memberships/            # поддомен "Абонементы" ("/pricing"): entity, dto, service, MVC-контроллер
-├── products/               # поддомен "Питание" ("/nutrition"): entity, dto, service, MVC-контроллер
-├── users/                  # поддомен "Участники" ("/users"): entity, dto, service, MVC-контроллер
-└── reviews/                # поддомен "Отзывы" ("/reviews"): entity, dto, service, MVC-контроллер
+├── trainers/               # поддомен "Тренеры": MVC ("/trainers") + REST API ("/api/trainers") + SSE
+├── memberships/            # поддомен "Абонементы": MVC ("/pricing") + REST API ("/api/memberships")
+├── products/               # поддомен "Питание": MVC ("/nutrition") + REST API ("/api/products")
+├── users/                  # поддомен "Участники": MVC ("/users") + REST API ("/api/users")
+└── reviews/                # поддомен "Отзывы": MVC ("/reviews") + REST API ("/api/reviews")
 views/
 ├── layouts/main.hbs        # общий layout страницы
 └── partials/                # переиспользуемые части: head-assets, header, nav, session-info, footer, карточки
@@ -291,7 +291,37 @@ erDiagram
   обновлении и удалении тренера. На клиенте (`public/js/trainers-sse.js`)
   поток читается через `EventSource`, а всплывающие уведомления об
   изменениях показываются прямо на странице `/trainers`.
-- Дополнительно (вне обязательного минимума ЛР1-3) в проекте уже подключены
-  REST API поверх тех же сервисов (`/api/trainers`), валидация DTO,
-  централизованная обработка ошибок и Swagger-документация — см.
-  `docs/lab4` для деталей соответствующей лабораторной работы.
+### ЛР4. RESTful API и его спецификация
+
+- У каждого из пяти поддоменов рядом с MVC-контроллером появился отдельный
+  REST-контроллер (`*.api.controller.ts`), использующий тот же сервис —
+  бизнес-логика не дублируется между MVC и API. Маршрут API называется по
+  имени сущности, а не по названию MVC-страницы (например, `Membership` —
+  `/pricing` в MVC, но `/api/memberships` в API).
+- Дочерние сущности из родительской: `GET /api/memberships/:id/users` и
+  `GET /api/memberships/:id/users/:userId`, `GET /api/users/:id/reviews` и
+  `GET /api/users/:id/reviews/:reviewId` — без циклических зависимостей
+  модулей эти выборки обращаются к таблице потомка напрямую через
+  `PrismaService`, а не через сервис соседнего модуля.
+- `AllExceptionsFilter` расширен: коды ошибок Prisma `P2002` (нарушение
+  уникальности, например повторный email участника) и `P2003` (нарушение
+  внешнего ключа, например несуществующий `membershipId`) теперь
+  превращаются в `409 Conflict` и `400 Bad Request` соответственно, а не в
+  общий `500`.
+- Пагинация (`findAllPaginated`, `Prisma.$transaction([findMany, count])`)
+  реализована во всех пяти сервисах; общая логика HATEOAS-заголовка `Link`
+  вынесена в `src/common/pagination.util.ts` — заодно исправлена
+  найденная в процессе ошибка (`request.baseUrl` у контроллеров Nest
+  всегда пуст, из-за чего `Link` указывал на `/` вместо пути ресурса).
+- Swagger: один тег на модуль (`Trainers API`, `Memberships API`,
+  `Products API`, `Users API`, `Reviews API`), `@ApiProperty` на всех
+  DTO тела запроса, отдельные `*-response.dto.ts`/`paginated-*.dto.ts`
+  для тел ответа, задокументированы реальные коды статусов (не только
+  200/404, но и 400/409/204) — доступно на `/api/docs`.
+- Попутно обнаружена и исправлена утечка `passwordHash` из `User` в JSON
+  API (на MVC-страницах была незаметна, так как Handlebars рендерит
+  только явно указанные в шаблоне поля) — оба сервиса (`UsersService`,
+  `ReviewsService`) теперь используют явный Prisma `select` без этого
+  поля.
+- Подробный отчёт, Postman-коллекция на все пять поддоменов и инструкция
+  по проверке — в [`docs/lab4`](./docs/lab4).
