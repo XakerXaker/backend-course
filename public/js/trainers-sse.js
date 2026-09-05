@@ -66,10 +66,37 @@
     grid.replaceWith(emptyMessage);
   }
 
+  function buildPlaceholder(name) {
+    const placeholder = document.createElement("div");
+    placeholder.className = "trainer-photo trainer-photo-placeholder";
+    placeholder.setAttribute("aria-hidden", "true");
+    placeholder.textContent = name && name.length > 0 ? name.charAt(0).toUpperCase() : "?";
+    return placeholder;
+  }
+
   function buildCard(trainer) {
     const article = document.createElement("article");
     article.className = "trainer-card";
     article.dataset.trainerId = trainer.id;
+
+    if (trainer.photoUrl) {
+      const img = document.createElement("img");
+      img.className = "trainer-photo";
+      img.src = trainer.photoUrl;
+      img.alt = `Фото тренера ${trainer.name}`;
+      img.loading = "lazy";
+
+      const placeholder = buildPlaceholder(trainer.name);
+      placeholder.style.display = "none";
+      img.addEventListener("error", function () {
+        img.style.display = "none";
+        placeholder.style.display = "flex";
+      });
+
+      article.append(img, placeholder);
+    } else {
+      article.append(buildPlaceholder(trainer.name));
+    }
 
     const h3 = document.createElement("h3");
     h3.textContent = trainer.name;

@@ -58,6 +58,14 @@ async function bootstrap() {
     return new Date(date).toLocaleDateString("ru-RU");
   });
 
+  // Первая буква имени — используется как заглушка на месте фото тренера,
+  // если photoUrl не задан.
+  hbs.registerHelper("initial", function (name: string) {
+    return typeof name === "string" && name.length > 0
+      ? name.charAt(0).toUpperCase()
+      : "?";
+  });
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle("PowerGit Gym API")
     .setDescription("REST API для управления сущностями PowerGit Gym")

@@ -186,6 +186,45 @@ cite {
   margin-top: 10px;
 }
 
+/* Выделенные врезки ("Акция!", "Новое поступление!" и т.п.) — раньше
+   ничем не отличались от обычного текста абзаца. */
+aside {
+  background: rgba(78, 205, 196, 0.1);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+aside h4 {
+  color: var(--primary);
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+/* Акция — более "тревожный" акцент через secondary вместо accent */
+aside.promo-banner {
+  background: rgba(255, 107, 107, 0.12);
+  border-left-color: var(--secondary);
+}
+
+aside.promo-banner h4 {
+  color: var(--secondary);
+}
+
+del {
+  color: #888;
+  text-decoration: line-through;
+  font-weight: normal;
+}
+
+ins {
+  color: var(--secondary);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
 .simple-form {
   background: #f0f0f0;
   padding: 20px;
@@ -553,6 +592,51 @@ footer {
   border-radius: 8px;
   padding: 14px;
   background: #fff;
+}
+
+/* Фото тренера — фиксированный размер, чтобы карточки были одинаковой
+   высоты независимо от того, задан photoUrl или нет. */
+.trainer-photo {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  display: block;
+  background: var(--light);
+}
+
+.trainer-photo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: white;
+  font-size: 48px;
+  font-weight: bold;
+  font-family: "Science Gothic", Arial, sans-serif;
+}
+
+/* Увеличенная версия для страницы тренера. display и background здесь не
+   задаём — они выставляются отдельным селектором ниже только для <img>,
+   а плейсхолдер (<div>) должен унаследовать display:flex и тёмный фон из
+   .trainer-photo-placeholder для центрирования буквы. */
+.trainer-detail-photo {
+  width: 100%;
+  max-width: 320px;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+img.trainer-detail-photo {
+  display: block;
+  background: var(--light);
+}
+
+.trainer-detail-photo.trainer-photo-placeholder {
+  font-size: 96px;
 }
 
 .trainer-card-actions {
