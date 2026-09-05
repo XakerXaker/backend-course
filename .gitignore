@@ -7,4 +7,23 @@
 !.vscode/launch.json
 !.vscode/extensions.json
 
-.env
+# WebStorm/IntelliJ — в задании явно рекомендуется для работы с БД и Prisma
+.idea/
+*.iml
+
+# Переменные окружения: .env, .env.local, .env.production и т.п.
+.env*
+!.env.example
+
+# Логи пакетных менеджеров
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ОС-специфичный мусор
+.DS_Store
+Thumbs.db
+
+# Инкрементальная сборка TypeScript / покрытие тестами (на будущее)
+*.tsbuildinfo
+/coverage

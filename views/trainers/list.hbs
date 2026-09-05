@@ -5,9 +5,16 @@
         <div id="trainer-toast-zone" aria-live="polite" aria-atomic="true"></div>
 
         {{#if trainers.length}}
-        <div class="trainer-grid">
+        <div class="trainer-grid" id="trainer-grid">
             {{#each trainers}}
-            <article class="trainer-card">
+            <article class="trainer-card" data-trainer-id="{{id}}">
+                {{#if photoUrl}}
+                <img class="trainer-photo" src="{{photoUrl}}" alt="Фото тренера {{name}}" loading="lazy"
+                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="trainer-photo trainer-photo-placeholder" style="display:none;" aria-hidden="true">{{initial name}}</div>
+                {{else}}
+                <div class="trainer-photo trainer-photo-placeholder" aria-hidden="true">{{initial name}}</div>
+                {{/if}}
                 <h3>{{name}}</h3>
                 <p><strong>Стаж:</strong> {{experience}} лет</p>
                 <p><strong>Специализация:</strong> {{specialization}}</p>
@@ -24,7 +31,7 @@
             {{/each}}
         </div>
         {{else}}
-        <p>Пока нет тренеров. Добавьте первого через форму.</p>
+        <p id="no-trainers-message">Пока нет тренеров. Добавьте первого через форму.</p>
         {{/if}}
 
         <div class="section-footer-actions">

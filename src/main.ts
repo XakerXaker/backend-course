@@ -1,3 +1,10 @@
+// Должен быть первым импортом: подгружает .env в process.env ДО того, как
+// начнётся сборка модулей Nest — иначе PrismaClient (создаётся при
+// инициализации PrismaModule) не найдёт DATABASE_URL и упадёт с
+// PrismaClientInitializationError. На хостинге (Render) переменные и так
+// приходят из окружения, поэтому наличие/отсутствие .env там не влияет.
+import "dotenv/config";
+
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { NestExpressApplication } from "@nestjs/platform-express";
@@ -49,6 +56,14 @@ async function bootstrap() {
 
   hbs.registerHelper("formatDate", function (date: Date | string) {
     return new Date(date).toLocaleDateString("ru-RU");
+  });
+
+  // Первая буква имени — используется как заглушка на месте фото тренера,
+  // если photoUrl не задан.
+  hbs.registerHelper("initial", function (name: string) {
+    return typeof name === "string" && name.length > 0
+      ? name.charAt(0).toUpperCase()
+      : "?";
   });
 
   const swaggerConfig = new DocumentBuilder()

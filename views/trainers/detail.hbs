@@ -1,20 +1,19 @@
 <main>
   <section id="trainer-detail">
+    {{#if trainer.photoUrl}}
+    <img class="trainer-detail-photo" src="{{trainer.photoUrl}}" alt="Фото тренера {{trainer.name}}"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+    <div class="trainer-detail-photo trainer-photo-placeholder" style="display:none;" aria-hidden="true">{{initial trainer.name}}</div>
+    {{else}}
+    <div class="trainer-detail-photo trainer-photo-placeholder" aria-hidden="true">{{initial trainer.name}}</div>
+    {{/if}}
+
     <h2>{{trainer.name}}</h2>
     <p><strong>Стаж:</strong> {{trainer.experience}} лет</p>
     <p><strong>Специализация:</strong> {{trainer.specialization}}</p>
 
     {{#if trainer.bio}}
       <p><strong>О тренере:</strong> {{trainer.bio}}</p>
-    {{/if}}
-
-    {{#if trainer.photoUrl}}
-      <p><strong>Фото:</strong>
-        <a
-          href="{{trainer.photoUrl}}"
-          target="_blank"
-          rel="noreferrer"
-        >Ссылка</a></p>
     {{/if}}
 
     <div class="trainer-detail-actions">
