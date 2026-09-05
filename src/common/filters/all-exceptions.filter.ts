@@ -5,12 +5,21 @@ import {
   HttpException,
   HttpStatus,
 } from "@nestjs/common";
+import { GqlContextType } from "@nestjs/graphql";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
+    // GraphQL-запросы не имеют host.switchToHttp().getRequest()/getResponse()
+    // в привычном REST-виде (originalUrl и т.п.) — здесь просто пробрасываем
+    // исключение дальше, и Apollo Server сам оформит его в поле errors
+    // GraphQL-ответа.
+    if (host.getType<GqlContextType>() === "graphql") {
+      throw exception;
+    }
+
     const context = host.switchToHttp();
     const request = context.getRequest<Request>();
     const response = context.getResponse<Response>();

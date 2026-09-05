@@ -3,6 +3,7 @@ import { MembershipsModule } from "../memberships/memberships.module";
 import { PrismaModule } from "../prisma/prisma.module";
 import { UsersApiController } from "./users.api.controller";
 import { UsersController } from "./users.controller";
+import { UsersResolver } from "./users.resolver";
 import { UsersService } from "./users.service";
 
 @Module({
@@ -10,7 +11,7 @@ import { UsersService } from "./users.service";
   // "Абонементы" (User.membershipId), а не дублирует его данные.
   imports: [PrismaModule, MembershipsModule],
   controllers: [UsersController, UsersApiController],
-  providers: [UsersService],
+  providers: [UsersService, UsersResolver],
   // Экспортируется, чтобы ReviewsModule мог связывать отзыв с реальным
   // зарегистрированным автором — связь User -> Review из ЛР2.
   exports: [UsersService],

@@ -1,0 +1,220 @@
+# Примеры запросов и мутаций для ЛР5 (PowerGit Gym GraphQL API).
+#
+# Как использовать: открыть http://localhost:3000/graphql, вставить это
+# содержимое в редактор операций Apollo Sandbox, выбрать нужную операцию
+# в выпадающем списке (в Sandbox можно хранить несколько именованных
+# операций в одном документе) и выполнить (Cmd/Ctrl+Enter). Часть мутаций
+# требует ID, полученные из предыдущих запросов — подставьте свои.
+
+# --- Trainers ------------------------------------------------------------
+
+query TrainersList {
+  trainers(page: 1, limit: 10) {
+    total
+    totalPages
+    items {
+      id
+      name
+      specialization
+      experience
+    }
+  }
+}
+
+mutation CreateTrainer {
+  createTrainer(
+    input: { name: "Иван Петров", specialization: "Кроссфит", experience: 5 }
+  ) {
+    id
+    name
+  }
+}
+
+# --- Memberships (+ вложенная страница участников через field resolver) --
+
+query MembershipsList {
+  memberships(page: 1, limit: 10) {
+    total
+    items {
+      id
+      name
+      price
+      membersCount
+    }
+  }
+}
+
+mutation CreateMembership {
+  createMembership(
+    input: {
+      name: "Базовый"
+      price: 1500
+      duration: 1
+      features: ["Зал", "Душ"]
+    }
+  ) {
+    id
+    name
+    membersCount
+  }
+}
+
+query MembershipWithUsers {
+  membership(id: "PUT_MEMBERSHIP_ID_HERE") {
+    name
+    membersCount
+    users(page: 1, limit: 5) {
+      total
+      items {
+        id
+        email
+      }
+    }
+  }
+}
+
+# --- Products (доменные мутации restock/sell вместо общего сеттера stock) -
+
+mutation CreateProduct {
+  createProduct(
+    input: { name: "Протеин", category: PROTEIN, price: 2200 }
+  ) {
+    id
+    name
+    stock
+  }
+}
+
+mutation RestockProduct {
+  restockProduct(id: "PUT_PRODUCT_ID_HERE", quantity: 20) {
+    id
+    stock
+  }
+}
+
+mutation SellProduct {
+  sellProduct(id: "PUT_PRODUCT_ID_HERE", quantity: 5) {
+    id
+    stock
+  }
+}
+
+# Ожидаемая ошибка (наглядно показывает бизнес-правило "нельзя продать
+# больше, чем есть на складе"), а не 500:
+mutation SellProductTooMuch {
+  sellProduct(id: "PUT_PRODUCT_ID_HERE", quantity: 999999) {
+    id
+    stock
+  }
+}
+
+# --- Users (+ вложенные membership/reviews через field resolver) ---------
+
+mutation CreateUser {
+  createUser(
+    input: {
+      email: "ivan@example.com"
+      password: "secret123"
+      name: "Иван"
+      membershipId: "PUT_MEMBERSHIP_ID_HERE"
+    }
+  ) {
+    id
+    email
+    membership {
+      id
+      name
+    }
+  }
+}
+
+query UserWithReviews {
+  user(id: "PUT_USER_ID_HERE") {
+    email
+    membership {
+      name
+    }
+    reviews(page: 1, limit: 5) {
+      total
+      items {
+        id
+        text
+        rating
+      }
+    }
+  }
+}
+
+mutation ChangeUserPassword {
+  changeUserPassword(id: "PUT_USER_ID_HERE", newPassword: "newSecret456") {
+    id
+    email
+  }
+}
+
+mutation AssignMembership {
+  assignMembership(
+    userId: "PUT_USER_ID_HERE"
+    membershipId: "PUT_MEMBERSHIP_ID_HERE"
+  ) {
+    id
+    membership {
+      name
+    }
+  }
+}
+
+mutation CancelMembership {
+  cancelMembership(userId: "PUT_USER_ID_HERE") {
+    id
+    membershipId
+  }
+}
+
+# --- Reviews (+ вложенный author через field resolver) --------------------
+
+mutation CreateReview {
+  createReview(
+    input: {
+      authorName: "Иван"
+      text: "Отличный зал, всем советую!"
+      rating: 5
+      authorId: "PUT_USER_ID_HERE"
+    }
+  ) {
+    id
+    text
+    author {
+      id
+      email
+    }
+  }
+}
+
+query ReviewsList {
+  reviews(page: 1, limit: 10) {
+    total
+    items {
+      id
+      authorName
+      rating
+      author {
+        email
+      }
+    }
+  }
+}
+
+# --- Ограничение сложности запроса ----------------------------------------
+# Широкий список (limit 50) с вложенным широким списком (limit 50) даёт
+# сложность 50 * 50 + ... > 1000 и должен быть отклонён ДО выполнения:
+
+query TooComplex {
+  memberships(page: 1, limit: 50) {
+    items {
+      users(page: 1, limit: 50) {
+        total
+      }
+    }
+  }
+}

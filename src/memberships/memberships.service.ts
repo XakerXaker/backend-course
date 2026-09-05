@@ -91,6 +91,32 @@ export class MembershipsService {
     });
   }
 
+  // Постраничная версия findUsers — используется field resolver'ом
+  // Membership.users в GraphQL-схеме, чтобы список участников большого
+  // абонемента не выгружался из БД целиком за один запрос.
+  async findUsersPaginated(membershipId: string, page: number, limit: number) {
+    await this.findOne(membershipId);
+
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(50, Math.max(1, limit));
+    const skip = (safePage - 1) * safeLimit;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        where: { membershipId },
+        skip,
+        take: safeLimit,
+        orderBy: { createdAt: "desc" },
+        select: SAFE_USER_SELECT,
+      }),
+      this.prisma.user.count({ where: { membershipId } }),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
+    return { items, page: safePage, limit: safeLimit, total, totalPages };
+  }
+
   async findUser(membershipId: string, userId: string) {
     await this.findOne(membershipId);
 
