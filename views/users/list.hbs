@@ -17,14 +17,14 @@
                 <tbody>
                     {{#each users}}
                     <tr>
-                        <td><a href="/users/{{id}}?auth={{../auth}}">{{#if name}}{{name}}{{else}}—{{/if}}</a></td>
+                        <td><a href="/users/{{id}}">{{#if name}}{{name}}{{else}}—{{/if}}</a></td>
                         <td>{{email}}</td>
                         <td>{{#if membership}}{{membership.name}}{{else}}Без абонемента{{/if}}</td>
                         <td>{{formatDate createdAt}}</td>
                         <td>
                             <div class="review-actions">
-                                <a href="/users/{{id}}/edit?auth={{../auth}}">Редактировать</a>
-                                <form method="post" action="/users/{{id}}/delete?auth={{../auth}}">
+                                <a href="/users/{{id}}/edit">Редактировать</a>
+                                <form method="post" action="/users/{{id}}/delete">
                                     <button type="submit" class="delete-btn">Удалить</button>
                                 </form>
                             </div>
@@ -39,7 +39,7 @@
         {{/if}}
 
         <div class="section-footer-actions">
-            <a class="submit-btn section-add-btn" href="/users/add?auth={{auth}}">Зарегистрировать участника</a>
+            <a class="submit-btn section-add-btn" href="/users/add">Зарегистрировать участника</a>
         </div>
     </section>
 </main>

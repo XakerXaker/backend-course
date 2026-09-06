@@ -15,14 +15,19 @@ import {
 } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
+  ApiCookieAuth,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
+import { Role } from "@prisma/client";
 import { Request, Response } from "express";
+import { PublicAccess } from "../auth/decorators/public.decorator";
+import { Roles } from "../auth/decorators/roles.decorator";
 import { ApiErrorResponseDto } from "../common/dto/api-error-response.dto";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto";
 import { buildPaginationLinkHeader } from "../common/pagination.util";
@@ -40,6 +45,7 @@ export class ProductsApiController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
+  @PublicAccess()
   @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить список товаров с пагинацией" })
   @ApiOkResponse({
@@ -76,6 +82,7 @@ export class ProductsApiController {
   }
 
   @Get(":id")
+  @PublicAccess()
   @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить товар по идентификатору" })
   @ApiOkResponse({ description: "Товар найден", type: ProductResponseDto })
@@ -85,18 +92,24 @@ export class ProductsApiController {
   }
 
   @Post()
-  @ApiOperation({ summary: "Создать товар" })
+  @Roles(Role.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: "Создать товар (только администратор)" })
   @ApiCreatedResponse({ description: "Товар успешно создан", type: ProductResponseDto })
   @ApiBadRequestResponse({ description: "Некорректное тело запроса", type: ApiErrorResponseDto })
+  @ApiForbiddenResponse({ description: "Недостаточно прав", type: ApiErrorResponseDto })
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
   }
 
   @Patch(":id")
-  @ApiOperation({ summary: "Обновить товар" })
+  @Roles(Role.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: "Обновить товар (только администратор)" })
   @ApiOkResponse({ description: "Товар успешно обновлён", type: ProductResponseDto })
   @ApiBadRequestResponse({ description: "Некорректные входные данные", type: ApiErrorResponseDto })
   @ApiNotFoundResponse({ description: "Товар не найден", type: ApiErrorResponseDto })
+  @ApiForbiddenResponse({ description: "Недостаточно прав", type: ApiErrorResponseDto })
   update(
     @Param("id", new ParseUUIDPipe()) id: string,
     @Body() updateProductDto: UpdateProductDto,
@@ -105,10 +118,13 @@ export class ProductsApiController {
   }
 
   @Delete(":id")
+  @Roles(Role.ADMIN)
+  @ApiCookieAuth()
   @HttpCode(204)
-  @ApiOperation({ summary: "Удалить товар" })
+  @ApiOperation({ summary: "Удалить товар (только администратор)" })
   @ApiNoContentResponse({ description: "Товар удалён" })
   @ApiNotFoundResponse({ description: "Товар не найден", type: ApiErrorResponseDto })
+  @ApiForbiddenResponse({ description: "Недостаточно прав", type: ApiErrorResponseDto })
   async remove(@Param("id", new ParseUUIDPipe()) id: string) {
     await this.productsService.remove(id);
   }

@@ -1,46 +1,44 @@
-import { Body, Controller, Get, Param, Post, Query, Render, Res } from "@nestjs/common";
-import { Response } from "express";
+import { Body, Controller, Get, Param, Post, Render, Req, Res } from "@nestjs/common";
+import { Role } from "@prisma/client";
+import { Request, Response } from "express";
+import { PublicAccess } from "../auth/decorators/public.decorator";
+import { Roles } from "../auth/decorators/roles.decorator";
 import { CreateMembershipDto } from "./dto/create-membership.dto";
 import { UpdateMembershipDto } from "./dto/update-membership.dto";
 import { MembershipsService } from "./memberships.service";
 
 // Контроллер обслуживает публичный маршрут "/pricing" (пункт меню "Цены"),
-// как и TrainersController совмещает публичную страницу с CRUD-управлением.
+// как и TrainersController совмещает публичную страницу с CRUD-управлением
+// (add/edit/delete — только для администратора, см. ЛР7).
 @Controller("pricing")
 export class MembershipsController {
   constructor(private readonly membershipsService: MembershipsService) {}
 
-  private getUser(auth: string) {
-    if (auth === "true") {
-      return { name: "Иван Иванов", email: "ivan@powergitgym.ru" };
-    }
-    return null;
-  }
-
   @Get()
+  @PublicAccess()
   @Render("memberships/list")
-  async getCollectionPage(@Query("auth") auth: string) {
+  async getCollectionPage(@Req() req: Request) {
     const memberships = await this.membershipsService.findAll();
 
     return {
       title: "Цены - PowerGit Gym",
       activePage: "pricing",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
+      isAdmin: req.user?.role === Role.ADMIN,
       memberships,
     };
   }
 
   @Get("add")
+  @Roles(Role.ADMIN)
   @Render("memberships/form")
-  getCreatePage(@Query("auth") auth: string) {
+  getCreatePage(@Req() req: Request) {
     return {
       title: "Добавить абонемент - PowerGit Gym",
       activePage: "pricing",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
       formTitle: "Добавление абонемента",
-      formAction: `/pricing?auth=${auth || "false"}`,
+      formAction: "/pricing",
       submitLabel: "Создать",
       isEdit: false,
       // price/duration — пустая строка, а не число, иначе в
@@ -51,17 +49,17 @@ export class MembershipsController {
   }
 
   @Get(":id/edit")
+  @Roles(Role.ADMIN)
   @Render("memberships/form")
-  async getUpdatePage(@Param("id") id: string, @Query("auth") auth: string) {
+  async getUpdatePage(@Param("id") id: string, @Req() req: Request) {
     const membership = await this.membershipsService.findOne(id);
 
     return {
       title: "Редактировать абонемент - PowerGit Gym",
       activePage: "pricing",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
       formTitle: "Редактирование абонемента",
-      formAction: `/pricing/${id}/edit?auth=${auth || "false"}`,
+      formAction: `/pricing/${id}/edit`,
       submitLabel: "Сохранить",
       isEdit: true,
       membership: {
@@ -72,36 +70,30 @@ export class MembershipsController {
   }
 
   @Post()
-  async create(
-    @Body() createMembershipDto: CreateMembershipDto,
-    @Query("auth") auth: string,
-    @Res() res: Response,
-  ) {
+  @Roles(Role.ADMIN)
+  async create(@Body() createMembershipDto: CreateMembershipDto, @Res() res: Response) {
     await this.membershipsService.create(createMembershipDto);
 
-    return res.redirect(`/pricing?auth=${auth || "false"}`);
+    return res.redirect("/pricing");
   }
 
   @Post(":id/edit")
+  @Roles(Role.ADMIN)
   async updateFromForm(
     @Param("id") id: string,
     @Body() updateMembershipDto: UpdateMembershipDto,
-    @Query("auth") auth: string,
     @Res() res: Response,
   ) {
     await this.membershipsService.update(id, updateMembershipDto);
 
-    return res.redirect(`/pricing?auth=${auth || "false"}`);
+    return res.redirect("/pricing");
   }
 
   @Post(":id/delete")
-  async removeFromForm(
-    @Param("id") id: string,
-    @Query("auth") auth: string,
-    @Res() res: Response,
-  ) {
+  @Roles(Role.ADMIN)
+  async removeFromForm(@Param("id") id: string, @Res() res: Response) {
     await this.membershipsService.remove(id);
 
-    return res.redirect(`/pricing?auth=${auth || "false"}`);
+    return res.redirect("/pricing");
   }
 }

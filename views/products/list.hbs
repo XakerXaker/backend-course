@@ -19,12 +19,14 @@
                     {{/if}}
                     <p class="review-rating">В наличии: {{stock}} шт.</p>
 
+                    {{#if ../../isAdmin}}
                     <div class="review-actions">
-                        <a href="/nutrition/{{id}}/edit?auth={{../../auth}}">Редактировать</a>
-                        <form method="post" action="/nutrition/{{id}}/delete?auth={{../../auth}}">
+                        <a href="/nutrition/{{id}}/edit">Редактировать</a>
+                        <form method="post" action="/nutrition/{{id}}/delete">
                             <button type="submit" class="delete-btn">Удалить</button>
                         </form>
                     </div>
+                    {{/if}}
                 </div>
                 {{/each}}
             </div>
@@ -34,8 +36,10 @@
         </article>
         {{/each}}
 
+        {{#if isAdmin}}
         <div class="section-footer-actions">
-            <a class="submit-btn section-add-btn" href="/nutrition/add?auth={{auth}}">Добавить товар</a>
+            <a class="submit-btn section-add-btn" href="/nutrition/add">Добавить товар</a>
         </div>
+        {{/if}}
     </section>
 </main>

@@ -1,4 +1,6 @@
-import { Controller, Get, Query, Render } from "@nestjs/common";
+import { Controller, Get, Render, Req } from "@nestjs/common";
+import { Request } from "express";
+import { PublicAccess } from "./auth/decorators/public.decorator";
 import { MembershipsService } from "./memberships/memberships.service";
 import { ProductsService } from "./products/products.service";
 import { ReviewsService } from "./reviews/reviews.service";
@@ -18,16 +20,10 @@ export class AppController {
     private readonly productsService: ProductsService,
   ) {}
 
-  private getUser(auth: string) {
-    if (auth === "true") {
-      return { name: "Иван Иванов", email: "ivan@powergitgym.ru" };
-    }
-    return null;
-  }
-
   @Get()
+  @PublicAccess()
   @Render("index")
-  async getIndexPage(@Query("auth") auth: string) {
+  async getIndexPage(@Req() req: Request) {
     const trainers = await this.trainersService.findAll();
     const reviews = await this.reviewsService.findAll(3);
     const memberships = await this.membershipsService.findAll();
@@ -36,8 +32,7 @@ export class AppController {
     return {
       title: "PowerGit Gym - Сила воли твой результат",
       activePage: "index",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
       trainers,
       reviews,
       categories,
@@ -46,37 +41,37 @@ export class AppController {
   }
 
   @Get("about")
+  @PublicAccess()
   @Render("about")
-  getAboutPage(@Query("auth") auth: string) {
+  getAboutPage(@Req() req: Request) {
     return {
       title: "О нас - PowerGit Gym",
       activePage: "about",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
     };
   }
 
   @Get("facilities")
+  @PublicAccess()
   @Render("facilities")
-  getFacilitiesPage(@Query("auth") auth: string) {
+  getFacilitiesPage(@Req() req: Request) {
     return {
       title: "Оснащение - PowerGit Gym",
       activePage: "facilities",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
     };
   }
 
   @Get("contact")
+  @PublicAccess()
   @Render("contact")
-  async getContactPage(@Query("auth") auth: string) {
+  async getContactPage(@Req() req: Request) {
     const trainers = await this.trainersService.findAll();
 
     return {
       title: "Контакты - PowerGit Gym",
       activePage: "contact",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
       trainers,
     };
   }

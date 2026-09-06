@@ -6,16 +6,19 @@ import {
   Param,
   ParseFilePipeBuilder,
   Post,
-  Query,
   Render,
+  Req,
   Res,
   Sse,
   UploadedFile,
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { Response } from "express";
+import { Role } from "@prisma/client";
+import { Request, Response } from "express";
 import { Observable } from "rxjs";
+import { PublicAccess } from "../auth/decorators/public.decorator";
+import { Roles } from "../auth/decorators/roles.decorator";
 import { StorageService } from "../storage/storage.service";
 import { CreateTrainerDto } from "./dto/create-trainer.dto";
 import { UpdateTrainerDto } from "./dto/update-trainer.dto";
@@ -23,6 +26,9 @@ import { TrainersService } from "./trainers.service";
 
 const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 
+// Управление тренерами (add/edit/delete) — служебная функция, доступная
+// только администратору (ЛР7); просмотр списка/карточки и SSE остаются
+// публичными для любого посетителя.
 @Controller("trainers")
 export class TrainersController {
   constructor(
@@ -30,37 +36,31 @@ export class TrainersController {
     private readonly storageService: StorageService,
   ) {}
 
-  private getUser(auth: string) {
-    if (auth === "true") {
-      return { name: "Иван Иванов", email: "ivan@powergitgym.ru" };
-    }
-    return null;
-  }
-
   @Get()
+  @PublicAccess()
   @Render("trainers/list")
-  async getCollectionPage(@Query("auth") auth: string) {
+  async getCollectionPage(@Req() req: Request) {
     const trainers = await this.trainersService.findAll();
 
     return {
       title: "Тренеры - PowerGit Gym",
       activePage: "trainers",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
+      isAdmin: req.user?.role === Role.ADMIN,
       trainers,
     };
   }
 
   @Get("add")
+  @Roles(Role.ADMIN)
   @Render("trainers/form")
-  getCreatePage(@Query("auth") auth: string) {
+  getCreatePage(@Req() req: Request) {
     return {
       title: "Добавить тренера - PowerGit Gym",
       activePage: "trainers",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
       formTitle: "Добавление тренера",
-      formAction: `/trainers?auth=${auth || "false"}`,
+      formAction: "/trainers",
       submitLabel: "Создать",
       isEdit: false,
       trainer: {
@@ -78,36 +78,38 @@ export class TrainersController {
   // Должен быть объявлен до "@Get(':id')", иначе Express/Nest сопоставит
   // GET /trainers/events с параметром :id="events" и вернёт 404.
   @Sse("events")
+  @PublicAccess()
   events(): Observable<MessageEvent> {
     return this.trainersService.getEvents();
   }
 
   @Get(":id")
+  @PublicAccess()
   @Render("trainers/detail")
-  async getEntityPage(@Param("id") id: string, @Query("auth") auth: string) {
+  async getEntityPage(@Param("id") id: string, @Req() req: Request) {
     const trainer = await this.trainersService.findOne(id);
 
     return {
       title: `${trainer.name} - Тренер`,
       activePage: "trainers",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
+      isAdmin: req.user?.role === Role.ADMIN,
       trainer,
     };
   }
 
   @Get(":id/edit")
+  @Roles(Role.ADMIN)
   @Render("trainers/form")
-  async getUpdatePage(@Param("id") id: string, @Query("auth") auth: string) {
+  async getUpdatePage(@Param("id") id: string, @Req() req: Request) {
     const trainer = await this.trainersService.findOne(id);
 
     return {
       title: `Редактировать ${trainer.name} - PowerGit Gym`,
       activePage: "trainers",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
       formTitle: "Редактирование тренера",
-      formAction: `/trainers/${id}/edit?auth=${auth || "false"}`,
+      formAction: `/trainers/${id}/edit`,
       submitLabel: "Сохранить",
       isEdit: true,
       trainer,
@@ -115,6 +117,7 @@ export class TrainersController {
   }
 
   @Post()
+  @Roles(Role.ADMIN)
   @UseInterceptors(FileInterceptor("photo"))
   async create(
     @Body() createTrainerDto: CreateTrainerDto,
@@ -125,7 +128,6 @@ export class TrainersController {
         .build({ fileIsRequired: false }),
     )
     photo: Express.Multer.File | undefined,
-    @Query("auth") auth: string,
     @Res() res: Response,
   ) {
     if (photo) {
@@ -139,10 +141,11 @@ export class TrainersController {
 
     await this.trainersService.create(createTrainerDto);
 
-    return res.redirect(`/trainers?auth=${auth || "false"}`);
+    return res.redirect("/trainers");
   }
 
   @Post(":id/edit")
+  @Roles(Role.ADMIN)
   @UseInterceptors(FileInterceptor("photo"))
   async updateFromForm(
     @Param("id") id: string,
@@ -154,7 +157,6 @@ export class TrainersController {
         .build({ fileIsRequired: false }),
     )
     photo: Express.Multer.File | undefined,
-    @Query("auth") auth: string,
     @Res() res: Response,
   ) {
     // Новое фото загружено — заменяем ссылку; иначе поле остаётся
@@ -170,17 +172,14 @@ export class TrainersController {
 
     const trainer = await this.trainersService.update(id, updateTrainerDto);
 
-    return res.redirect(`/trainers/${trainer.id}?auth=${auth || "false"}`);
+    return res.redirect(`/trainers/${trainer.id}`);
   }
 
   @Post(":id/delete")
-  async removeFromForm(
-    @Param("id") id: string,
-    @Query("auth") auth: string,
-    @Res() res: Response,
-  ) {
+  @Roles(Role.ADMIN)
+  async removeFromForm(@Param("id") id: string, @Res() res: Response) {
     await this.trainersService.remove(id);
 
-    return res.redirect(`/trainers?auth=${auth || "false"}`);
+    return res.redirect("/trainers");
   }
 }

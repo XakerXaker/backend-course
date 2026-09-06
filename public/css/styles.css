@@ -64,6 +64,22 @@ body {
   font-size: 14px;
 }
 
+/* Форма выхода (ЛР7) — inline-кнопка внутри flex-строки .session-info */
+.session-info-logout-form {
+  display: inline;
+}
+
+.role-badge {
+  background: var(--accent);
+  color: var(--primary);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: bold;
+  margin-left: 6px;
+  text-transform: uppercase;
+}
+
 .tagline {
   color: var(--accent);
   font-size: 14px;
@@ -279,6 +295,21 @@ ins {
 
 .submit-btn:hover {
   background: var(--secondary);
+}
+
+/* Сообщение об ошибке формы входа/регистрации (ЛР7) */
+.form-error {
+  background: #fdecea;
+  color: #611a15;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+}
+
+.auth-switch-link {
+  margin-top: 15px;
+  text-align: center;
 }
 
 table {

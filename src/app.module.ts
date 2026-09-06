@@ -6,6 +6,7 @@ import { GraphQLError } from "graphql";
 import { fieldExtensionsEstimator, getComplexity, simpleEstimator } from "graphql-query-complexity";
 import { join } from "path";
 import { AppController } from "./app.controller";
+import { AuthModule } from "./auth/auth.module";
 import { MAX_QUERY_COMPLEXITY } from "./graphql/complexity";
 import { MembershipsModule } from "./memberships/memberships.module";
 import { PrismaModule } from "./prisma/prisma.module";
@@ -19,6 +20,17 @@ import { UsersModule } from "./users/users.module";
   imports: [
     PrismaModule,
     StorageModule,
+    // Динамический модуль (ЛР7): конфигурация читается из переменных
+    // окружения здесь, при регистрации, а не внутри самого AuthModule —
+    // см. src/auth/auth.module.ts.
+    AuthModule.register({
+      jwtSecret: process.env.JWT_SECRET ?? "dev-only-insecure-secret-change-me",
+      jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "1d",
+      cookieName: process.env.AUTH_COOKIE_NAME ?? "access_token",
+      cookieMaxAgeMs: process.env.AUTH_COOKIE_MAX_AGE_MS
+        ? Number(process.env.AUTH_COOKIE_MAX_AGE_MS)
+        : 24 * 60 * 60 * 1000,
+    }),
     TrainersModule,
     MembershipsModule,
     ProductsModule,

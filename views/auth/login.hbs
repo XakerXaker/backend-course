@@ -1,0 +1,25 @@
+<main>
+  <section id="login-form-section">
+    <h2>Вход</h2>
+
+    {{#if error}}
+    <p class="form-error">{{error}}</p>
+    {{/if}}
+
+    <form class="simple-form" method="post" action="/login{{#if redirect}}?redirect={{redirect}}{{/if}}">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" value="{{email}}" required autofocus />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Пароль</label>
+        <input id="password" name="password" type="password" minlength="6" required />
+      </div>
+
+      <button type="submit" class="submit-btn">Войти</button>
+    </form>
+
+    <p class="auth-switch-link">Ещё нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+  </section>
+</main>

@@ -1,0 +1,54 @@
+<main>
+  <section id="profile-section">
+    <h2>Мой профиль</h2>
+
+    <p><strong>Роль:</strong> {{#if (eq member.role "ADMIN")}}Администратор{{else}}Обычный пользователь{{/if}}</p>
+    <p>
+      <strong>Абонемент:</strong>
+      {{#if member.membership}}{{member.membership.name}}{{else}}Не оформлен{{/if}}
+    </p>
+
+    {{#if error}}
+    <p class="form-error">{{error}}</p>
+    {{/if}}
+
+    <form class="simple-form" method="post" action="/profile">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" value="{{member.email}}" required />
+      </div>
+
+      <div class="form-group">
+        <label for="name">Имя</label>
+        <input id="name" name="name" type="text" value="{{member.name}}" />
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Телефон</label>
+        <input id="phone" name="phone" type="tel" value="{{member.phone}}" />
+      </div>
+
+      <button type="submit" class="submit-btn">Сохранить</button>
+    </form>
+
+    <h3>Сменить пароль</h3>
+
+    {{#if passwordError}}
+    <p class="form-error">{{passwordError}}</p>
+    {{/if}}
+
+    <form class="simple-form" method="post" action="/profile/password">
+      <div class="form-group">
+        <label for="currentPassword">Текущий пароль</label>
+        <input id="currentPassword" name="currentPassword" type="password" minlength="6" required />
+      </div>
+
+      <div class="form-group">
+        <label for="newPassword">Новый пароль</label>
+        <input id="newPassword" name="newPassword" type="password" minlength="6" required />
+      </div>
+
+      <button type="submit" class="submit-btn">Сменить пароль</button>
+    </form>
+  </section>
+</main>

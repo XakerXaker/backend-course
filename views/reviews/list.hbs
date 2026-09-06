@@ -9,7 +9,11 @@
                 <div class="review-header">
                     <h3>
                         {{#if author}}
-                        <a href="/users/{{author.id}}?auth={{../auth}}">{{authorName}}</a>
+                        {{#if ../isAdmin}}
+                        <a href="/users/{{author.id}}">{{authorName}}</a>
+                        {{else}}
+                        {{authorName}}
+                        {{/if}}
                         {{else}}
                         {{authorName}}
                         {{/if}}
@@ -19,12 +23,14 @@
                 <p>"{{text}}"</p>
                 <p class="review-rating">Оценка: {{rating}}/5</p>
 
+                {{#if ../isAdmin}}
                 <div class="review-actions">
-                    <a href="/reviews/{{id}}/edit?auth={{../auth}}">Редактировать</a>
-                    <form method="post" action="/reviews/{{id}}/delete?auth={{../auth}}">
+                    <a href="/reviews/{{id}}/edit">Редактировать</a>
+                    <form method="post" action="/reviews/{{id}}/delete">
                         <button type="submit" class="delete-btn">Удалить</button>
                     </form>
                 </div>
+                {{/if}}
             </article>
             {{/each}}
         </div>
@@ -33,7 +39,7 @@
         {{/if}}
 
         <div class="section-footer-actions">
-            <a class="submit-btn section-add-btn" href="/reviews/add?auth={{auth}}">Оставить отзыв</a>
+            <a class="submit-btn section-add-btn" href="/reviews/add">Оставить отзыв</a>
         </div>
     </section>
 
