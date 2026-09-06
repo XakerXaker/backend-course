@@ -3,17 +3,24 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   Param,
+  ParseFilePipeBuilder,
   ParseUUIDPipe,
   Patch,
   Post,
   Query,
   Req,
   Res,
+  UploadedFile,
+  UseInterceptors,
 } from "@nestjs/common";
+import { CacheInterceptor, CacheTTL } from "@nestjs/cache-manager";
+import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiBadRequestResponse,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -25,18 +32,36 @@ import { Request, Response } from "express";
 import { ApiErrorResponseDto } from "../common/dto/api-error-response.dto";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto";
 import { buildPaginationLinkHeader } from "../common/pagination.util";
+import { StorageService } from "../storage/storage.service";
 import { CreateTrainerDto } from "./dto/create-trainer.dto";
 import { PaginatedTrainersResponseDto } from "./dto/paginated-trainers-response.dto";
 import { TrainerResponseDto } from "./dto/trainer-response.dto";
 import { UpdateTrainerDto } from "./dto/update-trainer.dto";
 import { TrainersService } from "./trainers.service";
 
+const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
+
 @ApiTags("Trainers API")
 @Controller("api/trainers")
 export class TrainersApiController {
-  constructor(private readonly trainersService: TrainersService) {}
+  constructor(
+    private readonly trainersService: TrainersService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Get()
+  // Тренеры — самая часто запрашиваемая сущность приложения (используется
+  // и на главной, и на странице контактов, и в собственном разделе), поэтому
+  // именно для неё включено серверное in-memory кэширование ответа
+  // (CacheModule, см. TrainersModule) на несколько секунд — при частых
+  // повторных запросах Prisma/БД не трогаются вовсе.
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(5000)
+  // Кэширование на клиенте: Cache-Control разрешает браузеру не повторять
+  // запрос в течение 60 секунд, а после истечения — прислать условный GET
+  // с If-None-Match; ETag на такой запрос ставит EtagInterceptor
+  // (см. main.ts), и если тренеры не менялись, сервер ответит 304 без тела.
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить список тренеров с пагинацией" })
   @ApiOkResponse({
     description:
@@ -72,6 +97,9 @@ export class TrainersApiController {
   }
 
   @Get(":id")
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(5000)
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить тренера по идентификатору" })
   @ApiOkResponse({
     description: "Тренер найден",
@@ -130,5 +158,49 @@ export class TrainersApiController {
   })
   async remove(@Param("id", new ParseUUIDPipe()) id: string) {
     await this.trainersService.remove(id);
+  }
+
+  @Post(":id/photo")
+  @UseInterceptors(FileInterceptor("photo"))
+  @ApiConsumes("multipart/form-data")
+  @ApiOperation({
+    summary: "Загрузить фото тренера в объектное хранилище",
+    description:
+      "Файл (multipart/form-data, поле photo) загружается в S3-совместимое " +
+      "объектное хранилище (Yandex Object Storage), а не сохраняется на диске " +
+      "сервера — сущности сохраняется только публичная ссылка на объект.",
+  })
+  @ApiOkResponse({
+    description: "Фото загружено, ссылка на него сохранена в photoUrl",
+    type: TrainerResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: "Файл не передан, слишком большой или не является изображением",
+    type: ApiErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "Тренер не найден",
+    type: ApiErrorResponseDto,
+  })
+  async uploadPhoto(
+    @Param("id", new ParseUUIDPipe()) id: string,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({ fileType: /^image\/(jpeg|png|webp|gif)$/ })
+        .addMaxSizeValidator({ maxSize: MAX_PHOTO_SIZE_BYTES })
+        .build(),
+    )
+    photo: Express.Multer.File,
+  ) {
+    await this.trainersService.findOne(id);
+
+    const photoUrl = await this.storageService.uploadFile({
+      buffer: photo.buffer,
+      originalName: photo.originalname,
+      contentType: photo.mimetype,
+      folder: "trainers",
+    });
+
+    return this.trainersService.update(id, { photoUrl });
   }
 }

@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   Param,
   ParseUUIDPipe,
@@ -37,6 +38,7 @@ export class ReviewsApiController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
   @Get()
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить список отзывов с пагинацией" })
   @ApiOkResponse({
     description:
@@ -72,6 +74,7 @@ export class ReviewsApiController {
   }
 
   @Get(":id")
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить отзыв по идентификатору" })
   @ApiOkResponse({ description: "Отзыв найден", type: ReviewResponseDto })
   @ApiNotFoundResponse({ description: "Отзыв не найден", type: ApiErrorResponseDto })

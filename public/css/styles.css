@@ -252,6 +252,21 @@ ins {
   font-size: 16px;
 }
 
+.trainer-photo-preview {
+  display: block;
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.form-hint {
+  margin-top: 5px;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
 .submit-btn {
   background: var(--primary);
   color: white;

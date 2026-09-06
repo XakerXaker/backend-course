@@ -13,7 +13,8 @@
         "incremental": true,
         "skipLibCheck": true,
         "types": [
-            "node"
+            "node",
+            "multer"
         ],
         "strictNullChecks": false,
         "noImplicitAny": false,

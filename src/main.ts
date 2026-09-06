@@ -5,7 +5,7 @@
 // приходят из окружения, поэтому наличие/отсутствие .env там не влияет.
 import "dotenv/config";
 
-import { NestFactory } from "@nestjs/core";
+import { NestFactory, Reflector } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
@@ -15,6 +15,8 @@ import * as hbs from "hbs";
 
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
+import { EtagInterceptor } from "./common/interceptors/etag.interceptor";
+import { TimingInterceptor } from "./common/interceptors/timing.interceptor";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -29,6 +31,15 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Порядок важен: TimingInterceptor должен быть внешним, чтобы измерить
+  // весь конвейер обработки запроса (включая работу EtagInterceptor и
+  // серверного кэша ниже по цепочке), а не только код контроллера.
+  const reflector = app.get(Reflector);
+  app.useGlobalInterceptors(
+    new TimingInterceptor(reflector),
+    new EtagInterceptor(reflector),
+  );
 
   app.useStaticAssets(join(__dirname, "..", "public"));
 
