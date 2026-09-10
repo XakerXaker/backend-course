@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   Param,
   ParseUUIDPipe,
@@ -40,6 +41,7 @@ export class MembershipsApiController {
   constructor(private readonly membershipsService: MembershipsService) {}
 
   @Get()
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить список абонементов с пагинацией" })
   @ApiOkResponse({
     description:
@@ -75,6 +77,7 @@ export class MembershipsApiController {
   }
 
   @Get(":id")
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить абонемент по идентификатору" })
   @ApiOkResponse({ description: "Абонемент найден", type: MembershipResponseDto })
   @ApiNotFoundResponse({ description: "Абонемент не найден", type: ApiErrorResponseDto })
@@ -112,6 +115,7 @@ export class MembershipsApiController {
   }
 
   @Get(":id/users")
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить всех участников, оформивших этот абонемент" })
   @ApiOkResponse({ description: "Список участников", type: [UserResponseDto] })
   @ApiNotFoundResponse({ description: "Абонемент не найден", type: ApiErrorResponseDto })
@@ -120,6 +124,7 @@ export class MembershipsApiController {
   }
 
   @Get(":id/users/:userId")
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить конкретного участника этого абонемента" })
   @ApiOkResponse({ description: "Участник найден", type: UserResponseDto })
   @ApiNotFoundResponse({

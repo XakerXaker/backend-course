@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   Param,
   ParseUUIDPipe,
@@ -39,6 +40,7 @@ export class UsersApiController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить список участников с пагинацией" })
   @ApiOkResponse({
     description:
@@ -74,6 +76,7 @@ export class UsersApiController {
   }
 
   @Get(":id")
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить участника по идентификатору" })
   @ApiOkResponse({ description: "Участник найден", type: UserResponseDto })
   @ApiNotFoundResponse({ description: "Участник не найден", type: ApiErrorResponseDto })

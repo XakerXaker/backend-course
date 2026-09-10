@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   Param,
   ParseUUIDPipe,
@@ -39,6 +40,7 @@ export class ProductsApiController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить список товаров с пагинацией" })
   @ApiOkResponse({
     description:
@@ -74,6 +76,7 @@ export class ProductsApiController {
   }
 
   @Get(":id")
+  @Header("Cache-Control", "private, max-age=60, must-revalidate")
   @ApiOperation({ summary: "Получить товар по идентификатору" })
   @ApiOkResponse({ description: "Товар найден", type: ProductResponseDto })
   @ApiNotFoundResponse({ description: "Товар не найден", type: ApiErrorResponseDto })

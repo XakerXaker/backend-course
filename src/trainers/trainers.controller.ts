@@ -4,21 +4,31 @@ import {
   Get,
   MessageEvent,
   Param,
+  ParseFilePipeBuilder,
   Post,
   Query,
   Render,
   Res,
   Sse,
+  UploadedFile,
+  UseInterceptors,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import { Response } from "express";
 import { Observable } from "rxjs";
+import { StorageService } from "../storage/storage.service";
 import { CreateTrainerDto } from "./dto/create-trainer.dto";
 import { UpdateTrainerDto } from "./dto/update-trainer.dto";
 import { TrainersService } from "./trainers.service";
 
+const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
+
 @Controller("trainers")
 export class TrainersController {
-  constructor(private readonly trainersService: TrainersService) {}
+  constructor(
+    private readonly trainersService: TrainersService,
+    private readonly storageService: StorageService,
+  ) {}
 
   private getUser(auth: string) {
     if (auth === "true") {
@@ -105,23 +115,59 @@ export class TrainersController {
   }
 
   @Post()
+  @UseInterceptors(FileInterceptor("photo"))
   async create(
     @Body() createTrainerDto: CreateTrainerDto,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({ fileType: /^image\/(jpeg|png|webp|gif)$/ })
+        .addMaxSizeValidator({ maxSize: MAX_PHOTO_SIZE_BYTES })
+        .build({ fileIsRequired: false }),
+    )
+    photo: Express.Multer.File | undefined,
     @Query("auth") auth: string,
     @Res() res: Response,
   ) {
+    if (photo) {
+      createTrainerDto.photoUrl = await this.storageService.uploadFile({
+        buffer: photo.buffer,
+        originalName: photo.originalname,
+        contentType: photo.mimetype,
+        folder: "trainers",
+      });
+    }
+
     await this.trainersService.create(createTrainerDto);
 
     return res.redirect(`/trainers?auth=${auth || "false"}`);
   }
 
   @Post(":id/edit")
+  @UseInterceptors(FileInterceptor("photo"))
   async updateFromForm(
     @Param("id") id: string,
     @Body() updateTrainerDto: UpdateTrainerDto,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({ fileType: /^image\/(jpeg|png|webp|gif)$/ })
+        .addMaxSizeValidator({ maxSize: MAX_PHOTO_SIZE_BYTES })
+        .build({ fileIsRequired: false }),
+    )
+    photo: Express.Multer.File | undefined,
     @Query("auth") auth: string,
     @Res() res: Response,
   ) {
+    // Новое фото загружено — заменяем ссылку; иначе поле остаётся
+    // undefined, и TrainersService.update() не трогает текущее фото.
+    if (photo) {
+      updateTrainerDto.photoUrl = await this.storageService.uploadFile({
+        buffer: photo.buffer,
+        originalName: photo.originalname,
+        contentType: photo.mimetype,
+        folder: "trainers",
+      });
+    }
+
     const trainer = await this.trainersService.update(id, updateTrainerDto);
 
     return res.redirect(`/trainers/${trainer.id}?auth=${auth || "false"}`);

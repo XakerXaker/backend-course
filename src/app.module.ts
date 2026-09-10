@@ -11,12 +11,14 @@ import { MembershipsModule } from "./memberships/memberships.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ProductsModule } from "./products/products.module";
 import { ReviewsModule } from "./reviews/reviews.module";
+import { StorageModule } from "./storage/storage.module";
 import { TrainersModule } from "./trainers/trainers.module";
 import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
     PrismaModule,
+    StorageModule,
     TrainersModule,
     MembershipsModule,
     ProductsModule,
@@ -32,6 +34,13 @@ import { UsersModule } from "./users/users.module";
         // схема из памяти.
         autoSchemaFile: join(process.cwd(), "src/graphql/schema.gql"),
         sortSchema: true,
+        // По умолчанию @nestjs/apollo кладёт в контекст резолверов только
+        // `{ req }` — этого достаточно для самих резолверов, но
+        // TimingInterceptor (см. src/common/interceptors) не может
+        // выставить заголовок X-Elapsed-Time без объекта ответа. Экспресс
+        // передаёт его вторым параметром в context-фабрику
+        // (@as-integrations/express5), поэтому явно прокидываем оба.
+        context: ({ req, res }: { req: unknown; res: unknown }) => ({ req, res }),
         // По умолчанию @nestjs/apollo вне production поднимает устаревший
         // GraphQL Playground — отключаем его (playground: false) и вместо
         // этого подключаем встроенную песочницу Apollo Server (Apollo
