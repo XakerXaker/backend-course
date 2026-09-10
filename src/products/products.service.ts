@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Category, Product } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateProductDto } from "./dto/create-product.dto";
@@ -94,5 +94,39 @@ export class ProductsService {
     await this.findOne(id);
 
     return this.prisma.product.delete({ where: { id } });
+  }
+
+  // Пополнение и списание склада — два отдельных доменных действия вместо
+  // одной общей мутации "изменить stock": так нельзя случайно установить
+  // произвольное значение остатка в обход бизнес-правил (нельзя продать
+  // больше, чем есть на складе).
+  async restock(id: string, quantity: number) {
+    await this.findOne(id);
+
+    if (quantity <= 0) {
+      throw new BadRequestException("Количество для пополнения должно быть положительным");
+    }
+
+    return this.prisma.product.update({
+      where: { id },
+      data: { stock: { increment: quantity } },
+    });
+  }
+
+  async sell(id: string, quantity: number) {
+    const product = await this.findOne(id);
+
+    if (quantity <= 0) {
+      throw new BadRequestException("Количество для продажи должно быть положительным");
+    }
+
+    if (product.stock < quantity) {
+      throw new BadRequestException("Недостаточно товара на складе");
+    }
+
+    return this.prisma.product.update({
+      where: { id },
+      data: { stock: { decrement: quantity } },
+    });
   }
 }

@@ -127,6 +127,65 @@ export class UsersService {
     });
   }
 
+  // Постраничная версия findReviews — используется field resolver'ом
+  // User.reviews в GraphQL-схеме.
+  async findReviewsPaginated(userId: string, page: number, limit: number) {
+    await this.findOne(userId);
+
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(50, Math.max(1, limit));
+    const skip = (safePage - 1) * safeLimit;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.review.findMany({
+        where: { authorId: userId },
+        skip,
+        take: safeLimit,
+        orderBy: { createdAt: "desc" },
+      }),
+      this.prisma.review.count({ where: { authorId: userId } }),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
+    return { items, page: safePage, limit: safeLimit, total, totalPages };
+  }
+
+  // Смена пароля — отдельная от общего updateUser доменная операция
+  // (аналог "publish"/"hide" из задания ЛР5 для полей-переходов состояния),
+  // а не значение среди прочих в общем UpdateUserInput.
+  async changePassword(id: string, newPassword: string) {
+    await this.findOne(id);
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { passwordHash: this.hashPassword(newPassword) },
+      select: SAFE_USER_SELECT,
+    });
+  }
+
+  // Оформление и отмена абонемента — тоже два отдельных доменных действия
+  // вместо общего "изменить membershipId" в UpdateUserInput.
+  async assignMembership(userId: string, membershipId: string) {
+    await this.findOne(userId);
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { membershipId },
+      select: SAFE_USER_SELECT,
+    });
+  }
+
+  async cancelMembership(userId: string) {
+    await this.findOne(userId);
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { membershipId: null },
+      select: SAFE_USER_SELECT,
+    });
+  }
+
   async findReview(userId: string, reviewId: string) {
     await this.findOne(userId);
 
