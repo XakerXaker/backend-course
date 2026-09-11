@@ -4,23 +4,25 @@ import {
   ForbiddenException,
   Injectable,
 } from "@nestjs/common";
-import { GqlContextType } from "@nestjs/graphql";
 import { Reflector } from "@nestjs/core";
+import { GqlContextType } from "@nestjs/graphql";
 import { Role } from "@prisma/client";
-import { Request } from "express";
+import { UserRoleClaim } from "supertokens-node/recipe/userroles";
+import type { SessionRequest } from "supertokens-node/framework/express";
 import { ROLES_KEY } from "../decorators/roles.decorator";
 
-// Второй, отдельный от JwtAuthGuard гвард — реализует авторизацию по ролям
-// (см. https://docs.nestjs.com/security/authorization, на который ссылается
-// задание): проверяет не факт аутентификации, а то, что роль пользователя
-// входит в список, заданный декоратором @Roles(...). Подключён глобально
-// вслед за JwtAuthGuard, поэтому request.user на этом этапе уже есть у
-// любого запроса, прошедшего первый гвард.
+// Второй, отдельный от SessionAuthGuard гвард — реализует авторизацию по
+// ролям (см. https://docs.nestjs.com/security/authorization, на который
+// ссылается задание): проверяет не факт аутентификации, а то, что роль
+// пользователя (клейм UserRoleClaim recipe UserRoles) входит в список,
+// заданный декоратором @Roles(...). Подключён глобально вслед за
+// SessionAuthGuard, поэтому request.session на этом этапе уже провален
+// (см. @PublicAccess()) или гарантированно есть.
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     if (context.getType<GqlContextType>() === "graphql") {
       return true;
     }
@@ -31,17 +33,29 @@ export class RolesGuard implements CanActivate {
     ]);
 
     // Эндпоинт без @Roles(...) — доступен любому аутентифицированному
-    // пользователю (сам факт аутентификации уже проверен JwtAuthGuard).
+    // пользователю (сам факт аутентификации уже проверен SessionAuthGuard).
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<SessionRequest>();
 
-    if (!request.user || !requiredRoles.includes(request.user.role)) {
-      throw new ForbiddenException(
-        "Недостаточно прав для выполнения этого действия",
-      );
+    if (!request.session) {
+      throw new ForbiddenException("Недостаточно прав для выполнения этого действия");
+    }
+
+    let roles = await request.session.getClaimValue(UserRoleClaim);
+
+    if (!roles) {
+      // Клеймы читаются из уже провалидированного токена без обращения к
+      // Core — но если роль назначили ПОСЛЕ выпуска текущей сессии, клейма
+      // в токене ещё может не быть. Донабираем его явно перед отказом.
+      await request.session.fetchAndSetClaim(UserRoleClaim);
+      roles = await request.session.getClaimValue(UserRoleClaim);
+    }
+
+    if (!roles || !requiredRoles.some((role) => roles!.includes(role))) {
+      throw new ForbiddenException("Недостаточно прав для выполнения этого действия");
     }
 
     return true;

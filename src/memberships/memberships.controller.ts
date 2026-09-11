@@ -24,7 +24,7 @@ export class MembershipsController {
       title: "Цены - PowerGit Gym",
       activePage: "pricing",
       user: req.user,
-      isAdmin: req.user?.role === Role.ADMIN,
+      isAdmin: req.user?.isAdmin ?? false,
       memberships,
     };
   }

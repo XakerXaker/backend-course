@@ -132,7 +132,7 @@ export class MembershipsApiController {
 
   // Без @PublicAccess() — список участников абонемента содержит личные
   // данные (email/телефон), доступен только аутентифицированным
-  // пользователям (см. глобальный JwtAuthGuard).
+  // пользователям (см. глобальный SessionAuthGuard).
   @Get(":id/users")
   @ApiCookieAuth()
   @Header("Cache-Control", "private, max-age=60, must-revalidate")

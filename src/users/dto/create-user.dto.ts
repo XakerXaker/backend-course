@@ -9,12 +9,12 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: "Пароль (хранится только в виде хеша)",
-    minLength: 6,
+    minLength: 8,
     maxLength: 100,
     example: "secret123",
   })
   @IsString()
-  @Length(6, 100)
+  @Length(8, 100)
   password: string;
 
   @ApiPropertyOptional({

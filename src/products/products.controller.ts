@@ -23,7 +23,7 @@ export class ProductsController {
       title: "Питание - PowerGit Gym",
       activePage: "nutrition",
       user: req.user,
-      isAdmin: req.user?.role === Role.ADMIN,
+      isAdmin: req.user?.isAdmin ?? false,
       categories,
     };
   }
