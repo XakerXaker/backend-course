@@ -1,46 +1,43 @@
-import { Body, Controller, Get, Param, Post, Query, Render, Res } from "@nestjs/common";
-import { Category } from "@prisma/client";
-import { Response } from "express";
+import { Body, Controller, Get, Param, Post, Render, Req, Res } from "@nestjs/common";
+import { Category, Role } from "@prisma/client";
+import { Request, Response } from "express";
+import { PublicAccess } from "../auth/decorators/public.decorator";
+import { Roles } from "../auth/decorators/roles.decorator";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { CATEGORY_LABELS, ProductsService } from "./products.service";
 
-// Контроллер обслуживает публичный маршрут "/nutrition" (пункт меню "Питание").
+// Контроллер обслуживает публичный маршрут "/nutrition" (пункт меню
+// "Питание"); add/edit/delete — только для администратора (см. ЛР7).
 @Controller("nutrition")
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  private getUser(auth: string) {
-    if (auth === "true") {
-      return { name: "Иван Иванов", email: "ivan@powergitgym.ru" };
-    }
-    return null;
-  }
-
   @Get()
+  @PublicAccess()
   @Render("products/list")
-  async getCollectionPage(@Query("auth") auth: string) {
+  async getCollectionPage(@Req() req: Request) {
     const categories = await this.productsService.findCategorized();
 
     return {
       title: "Питание - PowerGit Gym",
       activePage: "nutrition",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
+      isAdmin: req.user?.role === Role.ADMIN,
       categories,
     };
   }
 
   @Get("add")
+  @Roles(Role.ADMIN)
   @Render("products/form")
-  getCreatePage(@Query("auth") auth: string) {
+  getCreatePage(@Req() req: Request) {
     return {
       title: "Добавить товар - PowerGit Gym",
       activePage: "nutrition",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
       formTitle: "Добавление товара",
-      formAction: `/nutrition?auth=${auth || "false"}`,
+      formAction: "/nutrition",
       submitLabel: "Создать",
       isEdit: false,
       categoryOptions: this.buildCategoryOptions(),
@@ -51,17 +48,17 @@ export class ProductsController {
   }
 
   @Get(":id/edit")
+  @Roles(Role.ADMIN)
   @Render("products/form")
-  async getUpdatePage(@Param("id") id: string, @Query("auth") auth: string) {
+  async getUpdatePage(@Param("id") id: string, @Req() req: Request) {
     const product = await this.productsService.findOne(id);
 
     return {
       title: "Редактировать товар - PowerGit Gym",
       activePage: "nutrition",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
       formTitle: "Редактирование товара",
-      formAction: `/nutrition/${id}/edit?auth=${auth || "false"}`,
+      formAction: `/nutrition/${id}/edit`,
       submitLabel: "Сохранить",
       isEdit: true,
       categoryOptions: this.buildCategoryOptions(product.category),
@@ -70,37 +67,31 @@ export class ProductsController {
   }
 
   @Post()
-  async create(
-    @Body() createProductDto: CreateProductDto,
-    @Query("auth") auth: string,
-    @Res() res: Response,
-  ) {
+  @Roles(Role.ADMIN)
+  async create(@Body() createProductDto: CreateProductDto, @Res() res: Response) {
     await this.productsService.create(createProductDto);
 
-    return res.redirect(`/nutrition?auth=${auth || "false"}`);
+    return res.redirect("/nutrition");
   }
 
   @Post(":id/edit")
+  @Roles(Role.ADMIN)
   async updateFromForm(
     @Param("id") id: string,
     @Body() updateProductDto: UpdateProductDto,
-    @Query("auth") auth: string,
     @Res() res: Response,
   ) {
     await this.productsService.update(id, updateProductDto);
 
-    return res.redirect(`/nutrition?auth=${auth || "false"}`);
+    return res.redirect("/nutrition");
   }
 
   @Post(":id/delete")
-  async removeFromForm(
-    @Param("id") id: string,
-    @Query("auth") auth: string,
-    @Res() res: Response,
-  ) {
+  @Roles(Role.ADMIN)
+  async removeFromForm(@Param("id") id: string, @Res() res: Response) {
     await this.productsService.remove(id);
 
-    return res.redirect(`/nutrition?auth=${auth || "false"}`);
+    return res.redirect("/nutrition");
   }
 
   private buildCategoryOptions(selected?: Category) {

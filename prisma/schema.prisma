@@ -13,9 +13,13 @@ model User {
   passwordHash String
   name         String?
   phone        String?
+  // Роль в системе (ЛР7): USER — обычный аутентифицированный участник,
+  // ADMIN — доступны служебные страницы и методы API управления каталогом
+  // (тренеры/абонементы/питание) и учётными записями других пользователей.
+  role         Role        @default(USER)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
-  
+
   // Связи
   membershipId String?
   membership   Membership? @relation(fields: [membershipId], references: [id])
@@ -98,6 +102,11 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
   
   @@unique([orderId, productId])
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 enum Category {

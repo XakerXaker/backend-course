@@ -23,6 +23,7 @@
 - [RxJS](https://rxjs.dev/) — перехватчики (`TimingInterceptor`, `EtagInterceptor`), SSE
 - [@nestjs/cache-manager](https://docs.nestjs.com/techniques/caching) — серверное in-memory кэширование
 - [AWS SDK для JavaScript (`@aws-sdk/client-s3`)](https://yandex.cloud/ru/docs/storage/tools/aws-sdk-js) — загрузка файлов в Yandex Object Storage
+- [@nestjs/jwt](https://docs.nestjs.com/security/authentication) + `cookie-parser` — аутентификация по JWT в httpOnly-cookie (см. раздел «ЛР7»)
 
 ## Запуск локально
 
@@ -81,6 +82,7 @@
 src/
 ├── app.controller.ts     # общие страницы, не относящиеся к поддоменам (главная, О нас, Оснащение, Контакты)
 ├── app.module.ts
+├── auth/                  # аутентификация/авторизация (ЛР7): динамический AuthModule, Guards, Middleware, JWT
 ├── common/                # общие DTO, глобальный exception filter, перехватчики (Timing/Etag)
 ├── prisma/                # инфраструктурный слой доступа к БД (PrismaService/PrismaModule)
 ├── storage/               # инфраструктурный слой объектного хранилища (StorageService/StorageModule, S3)
@@ -88,10 +90,11 @@ src/
 ├── trainers/               # поддомен "Тренеры": MVC ("/trainers") + REST API ("/api/trainers") + SSE + загрузка фото
 ├── memberships/            # поддомен "Абонементы": MVC ("/pricing") + REST API ("/api/memberships")
 ├── products/               # поддомен "Питание": MVC ("/nutrition") + REST API ("/api/products")
-├── users/                  # поддомен "Участники": MVC ("/users") + REST API ("/api/users")
+├── users/                  # поддомен "Участники": MVC ("/users", админ) + REST API ("/api/users") + self-service "/profile"
 └── reviews/                # поддомен "Отзывы": MVC ("/reviews") + REST API ("/api/reviews")
 views/
 ├── layouts/main.hbs        # общий layout страницы
+├── auth/                    # страницы входа/регистрации (ЛР7)
 └── partials/                # переиспользуемые части: head-assets, header, nav, session-info, footer, карточки
 ```
 
@@ -167,6 +170,7 @@ erDiagram
         String passwordHash
         String name
         String phone
+        Enum role "USER | ADMIN, см. ЛР7"
         DateTime createdAt
         String membershipId FK
     }
@@ -431,3 +435,48 @@ erDiagram
     только `image/jpeg|png|webp|gif`, не более 5 МБ.
 
 Подробный отчёт с примерами проверки (`curl`) — в [`docs/lab6`](./docs/lab6).
+
+### ЛР7. Аутентификация и авторизация
+
+- Собственная JWT-аутентификация (без стороннего Auth-as-a-Service —
+  допустимо и рекомендовано заданием для понимания процесса) оформлена
+  отдельным инфраструктурным модулем `src/auth` — **динамический модуль**
+  (`AuthModule.register({ jwtSecret, jwtExpiresIn, cookieName,
+  cookieMaxAgeMs })`), конфигурация которого читается из переменных
+  окружения (`JWT_SECRET`, `JWT_EXPIRES_IN`, `AUTH_COOKIE_NAME`,
+  `AUTH_COOKIE_MAX_AGE_MS`, см. `.env.example`) один раз при старте в
+  `src/app.module.ts`, а не внутри самого модуля.
+- Роль пользователя — новое поле `User.role` (`enum Role { USER ADMIN }`,
+  `prisma/migrations/20260906000000_add_user_role`) на уже существующей
+  сущности `User` (email/passwordHash были в схеме с ЛР2) — отдельной
+  таблицы "аккаунтов" не понадобилось.
+- **Middleware**: `CurrentUserMiddleware` (глобально, для всех страниц —
+  шапка сайта должна знать о сессии везде) разбирает JWT из httpOnly-cookie
+  (или `Authorization: Bearer` — для Postman/curl) и кладёт полезную
+  нагрузку в `request.user`, не блокируя запрос при невалидном токене;
+  `RequireLoginMiddleware` — тот самый сценарий "неаутентифицированный
+  посетитель запросил защищённую страницу", подключён точечно через
+  **Middleware Consumer** в `configure()` модулей `Trainers/Memberships/
+  Products/Reviews/UsersModule`, переадресует на `/login?redirect=...`.
+- **Guards**: `JwtAuthGuard` (аутентификация, обходится декоратором
+  `@PublicAccess()`) и `RolesGuard` (авторизация по ролям, декоратор
+  `@Roles(Role.ADMIN)`) — оба подключены **глобально** (`APP_GUARD`), по
+  умолчанию любой REST/MVC-эндпоинт требует входа.
+- **Swagger**: схема `cookie` (`DocumentBuilder.addCookieAuth(...)`) и
+  `@ApiCookieAuth()` на защищённых методах — на `/api/docs` у них теперь
+  иконка замка́.
+- **CORS**: `app.enableCors({ credentials: true, origin: CORS_ORIGIN })` —
+  без этого браузер не приложит httpOnly-cookie к запросу на другой origin.
+- Публичная самостоятельная регистрация (`/register`, `POST
+  /api/auth/register`) отделена от административной панели управления
+  учётными записями (`/users`, `/api/users` — теперь целиком доступна
+  только роли `ADMIN`, включая назначение роли другому пользователю);
+  собственные данные и пароль пользователь меняет на отдельной странице
+  `/profile` (`ProfileController`). Прежняя имитация сессии через
+  query-параметр `?auth=true|false` (со stub-методом `getUser(auth)` в
+  каждом контроллере) полностью убрана — состояние сессии везде реальное
+  (`req.user`), включая скрытие кнопок "Редактировать"/"Удалить" от
+  гостей и обычных пользователей на страницах тренеров/абонементов/
+  питания/отзывов.
+
+Подробный отчёт с примерами проверки (`curl`) — в [`docs/lab7`](./docs/lab7).

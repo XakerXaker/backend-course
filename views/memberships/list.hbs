@@ -30,12 +30,14 @@
                         </td>
                         <td>{{_count.users}}</td>
                         <td>
+                            {{#if ../isAdmin}}
                             <div class="review-actions">
-                                <a href="/pricing/{{id}}/edit?auth={{../auth}}">Редактировать</a>
-                                <form method="post" action="/pricing/{{id}}/delete?auth={{../auth}}">
+                                <a href="/pricing/{{id}}/edit">Редактировать</a>
+                                <form method="post" action="/pricing/{{id}}/delete">
                                     <button type="submit" class="delete-btn">Удалить</button>
                                 </form>
                             </div>
+                            {{/if}}
                         </td>
                     </tr>
                     {{/each}}
@@ -46,8 +48,10 @@
         <p>Пока нет абонементов. Добавьте первый через форму.</p>
         {{/if}}
 
+        {{#if isAdmin}}
         <div class="section-footer-actions">
-            <a class="submit-btn section-add-btn" href="/pricing/add?auth={{auth}}">Добавить абонемент</a>
+            <a class="submit-btn section-add-btn" href="/pricing/add">Добавить абонемент</a>
         </div>
+        {{/if}}
     </section>
 </main>

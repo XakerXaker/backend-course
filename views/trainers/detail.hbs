@@ -17,11 +17,13 @@
     {{/if}}
 
     <div class="trainer-detail-actions">
+      {{#if isAdmin}}
       <a
         class="submit-btn"
-        href="/trainers/{{trainer.id}}/edit?auth={{auth}}"
+        href="/trainers/{{trainer.id}}/edit"
       >Редактировать</a>
-      <a class="submit-btn" href="/trainers?auth={{auth}}">К списку</a>
+      {{/if}}
+      <a class="submit-btn" href="/trainers">К списку</a>
     </div>
   </section>
 </main>

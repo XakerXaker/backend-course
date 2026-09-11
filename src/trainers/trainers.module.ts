@@ -1,5 +1,6 @@
 import { CacheModule } from "@nestjs/cache-manager";
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
+import { RequireLoginMiddleware } from "../auth/middleware/require-login.middleware";
 import { PrismaModule } from "../prisma/prisma.module";
 import { StorageModule } from "../storage/storage.module";
 import { TrainersApiController } from "./trainers.api.controller";
@@ -25,4 +26,17 @@ import { TrainersService } from "./trainers.service";
   providers: [TrainersService, TrainersResolver],
   exports: [TrainersService],
 })
-export class TrainersModule {}
+export class TrainersModule implements NestModule {
+  // MiddlewareConsumer (ЛР7) — только на служебные (админские) страницы,
+  // список/карточка/SSE остаются публичными.
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(RequireLoginMiddleware)
+      .forRoutes(
+        { path: "trainers", method: RequestMethod.POST },
+        { path: "trainers/add", method: RequestMethod.GET },
+        { path: "trainers/:id/edit", method: RequestMethod.ALL },
+        { path: "trainers/:id/delete", method: RequestMethod.POST },
+      );
+  }
+}

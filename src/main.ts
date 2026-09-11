@@ -9,6 +9,7 @@ import { NestFactory, Reflector } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import * as cookieParser from "cookie-parser";
 import { join } from "path";
 import { readdirSync, readFileSync } from "fs";
 import * as hbs from "hbs";
@@ -20,6 +21,19 @@ import { TimingInterceptor } from "./common/interceptors/timing.interceptor";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // ЛР7: JWT читается из httpOnly-cookie (см. CurrentUserMiddleware) —
+  // без cookie-parser Express не разбирает заголовок Cookie в req.cookies.
+  app.use(cookieParser());
+
+  // ЛР7: клиент (браузер) должен получать/отправлять cookie с токеном при
+  // запросах на другой origin — без credentials: true браузер не станет
+  // прикладывать httpOnly-cookie к cross-origin запросу, а без явного
+  // списка origin (вместо "*") сам браузер не разрешит credentialed CORS.
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : true,
+    credentials: true,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -81,11 +95,20 @@ async function bootstrap() {
     .setTitle("PowerGit Gym API")
     .setDescription("REST API для управления сущностями PowerGit Gym")
     .setVersion("1.0")
+    .addTag("Auth API", "Регистрация, вход и текущая сессия")
     .addTag("Trainers API", "Операции с тренерами")
     .addTag("Memberships API", "Операции с абонементами и их участниками")
     .addTag("Products API", "Операции с товарами спортивного питания")
     .addTag("Users API", "Операции с зарегистрированными участниками и их отзывами")
     .addTag("Reviews API", "Операции с отзывами")
+    // ЛР7: схема авторизации — JWT в httpOnly cookie (см. AuthApiController,
+    // CurrentUserMiddleware). Декорированные @ApiCookieAuth() методы
+    // получают в Swagger UI иконку замка (см. docs.nestjs.com/openapi/security).
+    .addCookieAuth(process.env.AUTH_COOKIE_NAME ?? "access_token", {
+      type: "apiKey",
+      in: "cookie",
+      description: "JWT access-токен, выдаётся через POST /api/auth/login или /api/auth/register",
+    })
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup("api/docs", app, document, {

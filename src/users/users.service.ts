@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { randomBytes, scryptSync } from "crypto";
+import { Role } from "@prisma/client";
+import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
@@ -13,6 +14,7 @@ export const SAFE_USER_SELECT = {
   email: true,
   name: true,
   phone: true,
+  role: true,
   createdAt: true,
   updatedAt: true,
   membershipId: true,
@@ -151,6 +153,34 @@ export class UsersService {
     return { items, page: safePage, limit: safeLimit, total, totalPages };
   }
 
+  // Проверка логина/пароля — используется AuthService (ЛР7) при входе.
+  // Доменная логика хранения и сверки пароля остаётся внутри поддомена
+  // "Участники", а не дублируется в модуле аутентификации.
+  async validateCredentials(email: string, password: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user || !this.verifyPassword(password, user.passwordHash)) {
+      return null;
+    }
+
+    const { passwordHash: _passwordHash, ...safeUser } = user;
+
+    return safeUser;
+  }
+
+  // Смена роли — отдельная доменная операция (см. changePassword ниже):
+  // выдаётся только администратором через AuthApiController/AuthController,
+  // а не как поле в общем UpdateUserDto, которое мог бы прислать кто угодно.
+  async changeRole(id: string, role: Role) {
+    await this.findOne(id);
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { role },
+      select: SAFE_USER_SELECT,
+    });
+  }
+
   // Смена пароля — отдельная от общего updateUser доменная операция
   // (аналог "publish"/"hide" из задания ЛР5 для полей-переходов состояния),
   // а не значение среди прочих в общем UpdateUserInput.
@@ -207,5 +237,18 @@ export class UsersService {
     const derivedKey = scryptSync(password, salt, 64).toString("hex");
 
     return `${salt}:${derivedKey}`;
+  }
+
+  private verifyPassword(password: string, storedHash: string): boolean {
+    const [salt, key] = storedHash.split(":");
+    const keyBuffer = Buffer.from(key, "hex");
+    const derivedKey = scryptSync(password, salt, 64);
+
+    // timingSafeEqual вместо "===" — не даём стороннему наблюдателю
+    // определить пароль по разнице во времени сравнения хешей побайтово.
+    return (
+      keyBuffer.length === derivedKey.length &&
+      timingSafeEqual(keyBuffer, derivedKey)
+    );
   }
 }

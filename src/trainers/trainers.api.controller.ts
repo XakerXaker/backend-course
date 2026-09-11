@@ -21,14 +21,19 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiBadRequestResponse,
   ApiConsumes,
+  ApiCookieAuth,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
+import { Role } from "@prisma/client";
 import { Request, Response } from "express";
+import { PublicAccess } from "../auth/decorators/public.decorator";
+import { Roles } from "../auth/decorators/roles.decorator";
 import { ApiErrorResponseDto } from "../common/dto/api-error-response.dto";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto";
 import { buildPaginationLinkHeader } from "../common/pagination.util";
@@ -50,6 +55,7 @@ export class TrainersApiController {
   ) {}
 
   @Get()
+  @PublicAccess()
   // Тренеры — самая часто запрашиваемая сущность приложения (используется
   // и на главной, и на странице контактов, и в собственном разделе), поэтому
   // именно для неё включено серверное in-memory кэширование ответа
@@ -97,6 +103,7 @@ export class TrainersApiController {
   }
 
   @Get(":id")
+  @PublicAccess()
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(5000)
   @Header("Cache-Control", "private, max-age=60, must-revalidate")
@@ -114,7 +121,9 @@ export class TrainersApiController {
   }
 
   @Post()
-  @ApiOperation({ summary: "Создать тренера" })
+  @Roles(Role.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: "Создать тренера (только администратор)" })
   @ApiCreatedResponse({
     description: "Тренер успешно создан",
     type: TrainerResponseDto,
@@ -123,12 +132,15 @@ export class TrainersApiController {
     description: "Некорректное тело запроса",
     type: ApiErrorResponseDto,
   })
+  @ApiForbiddenResponse({ description: "Недостаточно прав", type: ApiErrorResponseDto })
   create(@Body() createTrainerDto: CreateTrainerDto) {
     return this.trainersService.create(createTrainerDto);
   }
 
   @Patch(":id")
-  @ApiOperation({ summary: "Обновить тренера" })
+  @Roles(Role.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: "Обновить тренера (только администратор)" })
   @ApiOkResponse({
     description: "Тренер успешно обновлён",
     type: TrainerResponseDto,
@@ -141,6 +153,7 @@ export class TrainersApiController {
     description: "Тренер не найден",
     type: ApiErrorResponseDto,
   })
+  @ApiForbiddenResponse({ description: "Недостаточно прав", type: ApiErrorResponseDto })
   update(
     @Param("id", new ParseUUIDPipe()) id: string,
     @Body() updateTrainerDto: UpdateTrainerDto,
@@ -149,18 +162,23 @@ export class TrainersApiController {
   }
 
   @Delete(":id")
+  @Roles(Role.ADMIN)
+  @ApiCookieAuth()
   @HttpCode(204)
-  @ApiOperation({ summary: "Удалить тренера" })
+  @ApiOperation({ summary: "Удалить тренера (только администратор)" })
   @ApiNoContentResponse({ description: "Тренер удалён" })
   @ApiNotFoundResponse({
     description: "Тренер не найден",
     type: ApiErrorResponseDto,
   })
+  @ApiForbiddenResponse({ description: "Недостаточно прав", type: ApiErrorResponseDto })
   async remove(@Param("id", new ParseUUIDPipe()) id: string) {
     await this.trainersService.remove(id);
   }
 
   @Post(":id/photo")
+  @Roles(Role.ADMIN)
+  @ApiCookieAuth()
   @UseInterceptors(FileInterceptor("photo"))
   @ApiConsumes("multipart/form-data")
   @ApiOperation({
