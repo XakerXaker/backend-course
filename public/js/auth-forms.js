@@ -23,7 +23,21 @@ document.addEventListener("DOMContentLoaded", () => {
       body: JSON.stringify({ formFields }),
     });
 
-    return response.json();
+    // Читаем тело как текст, а не сразу как JSON: если сервер вернул не
+    // JSON (например, HTML-страницу ошибки — так бывает, если запрос до
+    // SuperTokens вообще не дошёл), нужно увидеть содержимое и код ответа
+    // в консоли, а не просто споткнуться на SyntaxError.
+    const text = await response.text();
+
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      console.error(
+        `Auth-запрос на ${url} вернул не JSON (HTTP ${response.status}). Тело ответа:`,
+        text,
+      );
+      throw parseError;
+    }
   }
 
   function describeError(result) {
@@ -74,8 +88,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         showError(errorBox, describeError(result));
-      } catch {
-        showError(errorBox, "Сервис аутентификации недоступен, попробуйте позже");
+      } catch (error) {
+        console.error("Не удалось выполнить запрос аутентификации:", error);
+        showError(errorBox, "Сервис аутентификации недоступен, попробуйте позже (подробности — в консоли браузера)");
       }
     });
   }
@@ -101,8 +116,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         showError(errorBox, describeError(result));
-      } catch {
-        showError(errorBox, "Сервис аутентификации недоступен, попробуйте позже");
+      } catch (error) {
+        console.error("Не удалось выполнить запрос аутентификации:", error);
+        showError(errorBox, "Сервис аутентификации недоступен, попробуйте позже (подробности — в консоли браузера)");
       }
     });
   }
