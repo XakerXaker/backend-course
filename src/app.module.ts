@@ -23,12 +23,19 @@ import { UsersModule } from "./users/users.module";
     // Динамический модуль (ЛР7): конфигурация провайдера аутентификации
     // (SuperTokens) читается из переменных окружения здесь, при
     // регистрации, а не внутри самого AuthModule — см. src/auth/auth.module.ts.
+    //
+    // "||", а не "??" — SuperTokens падает с "Please provide a valid domain
+    // name" уже на этапе supertokens.init(), если connectionURI/apiDomain/
+    // websiteDomain окажутся пустой строкой (например, .env скопирован из
+    // .env.example и значение случайно стёрто, а не заполнено); "??"
+    // подставляет запасное значение только при undefined, пустую строку
+    // пропускает как есть.
     AuthModule.forRoot({
-      connectionURI: process.env.SUPERTOKENS_CONNECTION_URI ?? "http://localhost:3567",
-      apiKey: process.env.SUPERTOKENS_API_KEY,
-      appName: process.env.APP_NAME ?? "PowerGit Gym",
-      apiDomain: process.env.API_DOMAIN ?? "http://localhost:3000",
-      websiteDomain: process.env.WEBSITE_DOMAIN ?? "http://localhost:3000",
+      connectionURI: process.env.SUPERTOKENS_CONNECTION_URI || "http://localhost:3567",
+      apiKey: process.env.SUPERTOKENS_API_KEY || undefined,
+      appName: process.env.APP_NAME || "PowerGit Gym",
+      apiDomain: process.env.API_DOMAIN || "http://localhost:3000",
+      websiteDomain: process.env.WEBSITE_DOMAIN || "http://localhost:3000",
     }),
     TrainersModule,
     MembershipsModule,
