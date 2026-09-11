@@ -20,16 +20,15 @@ import { UsersModule } from "./users/users.module";
   imports: [
     PrismaModule,
     StorageModule,
-    // Динамический модуль (ЛР7): конфигурация читается из переменных
-    // окружения здесь, при регистрации, а не внутри самого AuthModule —
-    // см. src/auth/auth.module.ts.
-    AuthModule.register({
-      jwtSecret: process.env.JWT_SECRET ?? "dev-only-insecure-secret-change-me",
-      jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "1d",
-      cookieName: process.env.AUTH_COOKIE_NAME ?? "access_token",
-      cookieMaxAgeMs: process.env.AUTH_COOKIE_MAX_AGE_MS
-        ? Number(process.env.AUTH_COOKIE_MAX_AGE_MS)
-        : 24 * 60 * 60 * 1000,
+    // Динамический модуль (ЛР7): конфигурация провайдера аутентификации
+    // (SuperTokens) читается из переменных окружения здесь, при
+    // регистрации, а не внутри самого AuthModule — см. src/auth/auth.module.ts.
+    AuthModule.forRoot({
+      connectionURI: process.env.SUPERTOKENS_CONNECTION_URI ?? "http://localhost:3567",
+      apiKey: process.env.SUPERTOKENS_API_KEY,
+      appName: process.env.APP_NAME ?? "PowerGit Gym",
+      apiDomain: process.env.API_DOMAIN ?? "http://localhost:3000",
+      websiteDomain: process.env.WEBSITE_DOMAIN ?? "http://localhost:3000",
     }),
     TrainersModule,
     MembershipsModule,

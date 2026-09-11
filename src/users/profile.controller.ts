@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Post, Render, Res } from "@nestjs/common";
+import { Body, ConflictException, Controller, Get, Post, Render, Res } from "@nestjs/common";
 import { Response } from "express";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
-import { AuthenticatedUser } from "../auth/interfaces/jwt-payload.interface";
+import { AuthenticatedUser } from "../auth/interfaces/authenticated-user.interface";
 import { ChangeOwnPasswordDto } from "./dto/change-own-password.dto";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UsersService } from "./users.service";
@@ -18,7 +18,7 @@ export class ProfileController {
   @Get()
   @Render("users/profile")
   async getProfilePage(@CurrentUser() currentUser: AuthenticatedUser) {
-    const member = await this.usersService.findOne(currentUser.sub);
+    const member = await this.usersService.findOne(currentUser.id);
 
     return {
       title: "Мой профиль - PowerGit Gym",
@@ -37,13 +37,13 @@ export class ProfileController {
     @Res() res: Response,
   ) {
     try {
-      await this.usersService.update(currentUser.sub, dto);
+      await this.usersService.update(currentUser.id, dto);
 
       return res.redirect("/profile");
     } catch (error) {
-      const member = await this.usersService.findOne(currentUser.sub);
+      const member = await this.usersService.findOne(currentUser.id);
       const message =
-        (error as { code?: string })?.code === "P2002"
+        error instanceof ConflictException
           ? "Пользователь с таким email уже зарегистрирован"
           : "Не удалось сохранить изменения";
 
@@ -64,13 +64,13 @@ export class ProfileController {
     @Body() dto: ChangeOwnPasswordDto,
     @Res() res: Response,
   ) {
-    const validCurrentPassword = await this.usersService.validateCredentials(
+    const isCurrentPasswordValid = await this.usersService.verifyCurrentPassword(
       currentUser.email,
       dto.currentPassword,
     );
 
-    if (!validCurrentPassword) {
-      const member = await this.usersService.findOne(currentUser.sub);
+    if (!isCurrentPasswordValid) {
+      const member = await this.usersService.findOne(currentUser.id);
 
       return res.status(400).render("users/profile", {
         title: "Мой профиль - PowerGit Gym",
@@ -82,7 +82,7 @@ export class ProfileController {
       });
     }
 
-    await this.usersService.changePassword(currentUser.sub, dto.newPassword);
+    await this.usersService.changePassword(currentUser.id, dto.newPassword);
 
     return res.redirect("/profile");
   }

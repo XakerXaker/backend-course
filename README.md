@@ -23,7 +23,7 @@
 - [RxJS](https://rxjs.dev/) — перехватчики (`TimingInterceptor`, `EtagInterceptor`), SSE
 - [@nestjs/cache-manager](https://docs.nestjs.com/techniques/caching) — серверное in-memory кэширование
 - [AWS SDK для JavaScript (`@aws-sdk/client-s3`)](https://yandex.cloud/ru/docs/storage/tools/aws-sdk-js) — загрузка файлов в Yandex Object Storage
-- [@nestjs/jwt](https://docs.nestjs.com/security/authentication) + `cookie-parser` — аутентификация по JWT в httpOnly-cookie (см. раздел «ЛР7»)
+- [SuperTokens](https://supertokens.com/) (`supertokens-node`) — аутентификация/авторизация как услуга: recipe EmailPassword/Session/UserRoles (см. раздел «ЛР7»)
 
 ## Запуск локально
 
@@ -56,6 +56,14 @@
    остальное приложение работает как обычно, а запрос на загрузку фото
    вернёт ошибку обращения к хранилищу.
 
+   Переменные `SUPERTOKENS_*`/`API_DOMAIN`/`WEBSITE_DOMAIN` (аутентификация,
+   см. раздел «ЛР7») нужны для регистрации/входа — заполните их своим
+   Connection URI и API-ключом от [supertokens.com](https://supertokens.com/)
+   (Managed Service, раздел Development вашего проекта) либо адресом
+   самостоятельно развёрнутого Core. Без них всё остальное приложение
+   (просмотр каталога, отзывы) по-прежнему работает — упадут только
+   запросы, которым нужна сессия.
+
 3. Примените миграции Prisma к базе данных:
 
    ```bash
@@ -82,7 +90,7 @@
 src/
 ├── app.controller.ts     # общие страницы, не относящиеся к поддоменам (главная, О нас, Оснащение, Контакты)
 ├── app.module.ts
-├── auth/                  # аутентификация/авторизация (ЛР7): динамический AuthModule, Guards, Middleware, JWT
+├── auth/                  # аутентификация/авторизация (ЛР7): динамический AuthModule + SuperTokens (Guards/Middleware)
 ├── common/                # общие DTO, глобальный exception filter, перехватчики (Timing/Etag)
 ├── prisma/                # инфраструктурный слой доступа к БД (PrismaService/PrismaModule)
 ├── storage/               # инфраструктурный слой объектного хранилища (StorageService/StorageModule, S3)
@@ -438,45 +446,59 @@ erDiagram
 
 ### ЛР7. Аутентификация и авторизация
 
-- Собственная JWT-аутентификация (без стороннего Auth-as-a-Service —
-  допустимо и рекомендовано заданием для понимания процесса) оформлена
-  отдельным инфраструктурным модулем `src/auth` — **динамический модуль**
-  (`AuthModule.register({ jwtSecret, jwtExpiresIn, cookieName,
-  cookieMaxAgeMs })`), конфигурация которого читается из переменных
-  окружения (`JWT_SECRET`, `JWT_EXPIRES_IN`, `AUTH_COOKIE_NAME`,
-  `AUTH_COOKIE_MAX_AGE_MS`, см. `.env.example`) один раз при старте в
-  `src/app.module.ts`, а не внутри самого модуля.
-- Роль пользователя — новое поле `User.role` (`enum Role { USER ADMIN }`,
-  `prisma/migrations/20260906000000_add_user_role`) на уже существующей
-  сущности `User` (email/passwordHash были в схеме с ЛР2) — отдельной
-  таблицы "аккаунтов" не понадобилось.
-- **Middleware**: `CurrentUserMiddleware` (глобально, для всех страниц —
-  шапка сайта должна знать о сессии везде) разбирает JWT из httpOnly-cookie
-  (или `Authorization: Bearer` — для Postman/curl) и кладёт полезную
-  нагрузку в `request.user`, не блокируя запрос при невалидном токене;
-  `RequireLoginMiddleware` — тот самый сценарий "неаутентифицированный
-  посетитель запросил защищённую страницу", подключён точечно через
-  **Middleware Consumer** в `configure()` модулей `Trainers/Memberships/
-  Products/Reviews/UsersModule`, переадресует на `/login?redirect=...`.
-- **Guards**: `JwtAuthGuard` (аутентификация, обходится декоратором
-  `@PublicAccess()`) и `RolesGuard` (авторизация по ролям, декоратор
-  `@Roles(Role.ADMIN)`) — оба подключены **глобально** (`APP_GUARD`), по
-  умолчанию любой REST/MVC-эндпоинт требует входа.
-- **Swagger**: схема `cookie` (`DocumentBuilder.addCookieAuth(...)`) и
-  `@ApiCookieAuth()` на защищённых методах — на `/api/docs` у них теперь
-  иконка замка́.
-- **CORS**: `app.enableCors({ credentials: true, origin: CORS_ORIGIN })` —
-  без этого браузер не приложит httpOnly-cookie к запросу на другой origin.
-- Публичная самостоятельная регистрация (`/register`, `POST
-  /api/auth/register`) отделена от административной панели управления
-  учётными записями (`/users`, `/api/users` — теперь целиком доступна
-  только роли `ADMIN`, включая назначение роли другому пользователю);
-  собственные данные и пароль пользователь меняет на отдельной странице
-  `/profile` (`ProfileController`). Прежняя имитация сессии через
-  query-параметр `?auth=true|false` (со stub-методом `getUser(auth)` в
-  каждом контроллере) полностью убрана — состояние сессии везде реальное
-  (`req.user`), включая скрытие кнопок "Редактировать"/"Удалить" от
-  гостей и обычных пользователей на страницах тренеров/абонементов/
-  питания/отзывов.
+- Аутентификация вынесена стороннему поставщику —
+  [SuperTokens](https://supertokens.com/) (`supertokens-node`, recipe
+  EmailPassword/Session/UserRoles), а не реализована самостоятельно.
+  Оформлена **динамическим модулем** `src/auth`
+  (`AuthModule.forRoot({ connectionURI, apiKey, appName, apiDomain,
+  websiteDomain })`), конфигурация которого читается из переменных
+  окружения (`SUPERTOKENS_CONNECTION_URI`, `SUPERTOKENS_API_KEY`,
+  `APP_NAME`, `API_DOMAIN`, `WEBSITE_DOMAIN`, см. `.env.example`) один раз
+  при старте в `src/app.module.ts`. Маршруты `/auth/signup`, `/auth/signin`,
+  `/auth/signout`, `/auth/session/refresh` генерирует сам SDK — вручную не
+  написаны.
+- Роль пользователя — `User.role` (`enum Role { USER ADMIN }`) на уже
+  существующей сущности `User` — зеркало для SQL/админ-панели; источник
+  истины при авторизации — клеймы сессии SuperTokens (recipe UserRoles).
+  Поле `passwordHash`, наоборот, удалено из схемы — пароль хранит и
+  проверяет провайдер.
+- **Middleware**: `SessionInfoMiddleware` (глобально) читает сессию
+  SuperTokens и кладёт упрощённые данные пользователя в `request.user`, не
+  блокируя запрос при невалидном токене; `RequireLoginMiddleware` — тот
+  самый сценарий "неаутентифицированный посетитель запросил защищённую
+  страницу", подключён точечно через **Middleware Consumer** в
+  `configure()` модулей `Trainers/Memberships/Products/Reviews/UsersModule`.
+- **Guards**: `SessionAuthGuard` (аутентификация, обходится декоратором
+  `@PublicAccess()`) и `RolesGuard` (авторизация по ролям через
+  `UserRoleClaim`, декоратор `@Roles(Role.ADMIN)`) — оба подключены
+  **глобально** (`APP_GUARD`).
+- **Swagger**: схема `cookie` (имя `sAccessToken`, cookie сессии
+  SuperTokens) и `@ApiCookieAuth()` на защищённых методах. **CORS**
+  донастроен под протокол провайдера
+  (`supertokens.getAllCORSHeaders()`); `bodyParser: false` при создании
+  приложения — SuperTokens сам разбирает тело запроса для своих
+  маршрутов, обычный `express.json()` подключается вручную сразу после.
+- `UsersService` — единственная точка, где домен обращается к SDK:
+  регистрация (`EmailPassword.signUp`), смена email/пароля
+  (`updateEmailOrPassword`), удаление аккаунта (`supertokens.deleteUser`),
+  назначение роли (`UserRoles.addRoleToUser`/`removeUserRole`) — сигнатуры
+  методов не изменились, поэтому GraphQL-резолвер (ЛР5) и MVC/REST
+  контроллеры продолжили работать без правок.
+- Публичная самостоятельная регистрация (`/register` → `POST
+  /auth/signup`) отделена от административной панели управления учётными
+  записями (`/users`, `/api/users` — доступна только роли `ADMIN`, включая
+  назначение роли); собственные данные и пароль пользователь меняет на
+  `/profile` (`ProfileController`, свой маршрут, не автогенерируемый SDK).
+  Прежняя имитация сессии через query-параметр `?auth=true|false` полностью
+  убрана — состояние сессии везде реальное, включая скрытие кнопок
+  "Редактировать"/"Удалить" от гостей и обычных пользователей.
+- ⚠️ Среда, в которой выполнялась разработка, блокирует egress-политикой
+  все хосты `*.supertokens.io` (Docker-реестр, публичный demo-core и даже
+  персональный Managed-инстанс) — поэтому живой цикл регистрация → вход →
+  защищённый доступ → смена роли проверен лишь частично (всё, что не
+  требует обращения к Core: маршрутизация, guards, redirect, обработка
+  ошибок, body-parsing — подтверждено запросами к реально поднятому
+  приложению). Подробности и инструкция по проверке в среде с доступом к
+  supertokens.com — в отчёте.
 
 Подробный отчёт с примерами проверки (`curl`) — в [`docs/lab7`](./docs/lab7).

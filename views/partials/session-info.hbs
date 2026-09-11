@@ -2,12 +2,10 @@
     {{#if user}}
     <span class="session-info-text">
         Вы вошли как <strong>{{#if user.name}}{{user.name}}{{else}}{{user.email}}{{/if}}</strong>
-        {{#if (eq user.role "ADMIN")}}<span class="role-badge">Администратор</span>{{/if}}
+        {{#if user.isAdmin}}<span class="role-badge">Администратор</span>{{/if}}
     </span>
     <a class="submit-btn session-info-btn" href="/profile">Профиль</a>
-    <form method="post" action="/logout" class="session-info-logout-form">
-        <button type="submit" class="submit-btn session-info-btn">Выйти</button>
-    </form>
+    <button type="button" id="logout-btn" class="submit-btn session-info-btn">Выйти</button>
     {{else}}
     <span class="session-info-text">Вы не авторизованы</span>
     <a class="submit-btn session-info-btn" href="/login">Войти</a>

@@ -10,13 +10,13 @@ export class UpdateUserDto {
 
   @ApiPropertyOptional({
     description: "Новый пароль (необязательно)",
-    minLength: 6,
+    minLength: 8,
     maxLength: 100,
     example: "newsecret123",
   })
   @IsOptional()
   @IsString()
-  @Length(6, 100)
+  @Length(8, 100)
   password?: string;
 
   @ApiPropertyOptional({

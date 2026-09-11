@@ -8,7 +8,7 @@
         <li><a href="/facilities" {{#if (eq activePage 'facilities' )}}class="active"
                 {{/if}}>Оснащение</a></li>
         <li><a href="/pricing" {{#if (eq activePage 'pricing' )}}class="active" {{/if}}>Цены</a></li>
-        {{#if (eq user.role "ADMIN")}}
+        {{#if user.isAdmin}}
         <li><a href="/users" {{#if (eq activePage 'users' )}}class="active" {{/if}}>Участники</a></li>
         {{/if}}
         <li><a href="/contact" {{#if (eq activePage 'contact' )}}class="active" {{/if}}>Контакты</a></li>

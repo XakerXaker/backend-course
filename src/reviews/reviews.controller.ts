@@ -30,7 +30,7 @@ export class ReviewsController {
       title: "Отзывы - PowerGit Gym",
       activePage: "reviews",
       user: req.user,
-      isAdmin: req.user?.role === Role.ADMIN,
+      isAdmin: req.user?.isAdmin ?? false,
       reviews,
     };
   }

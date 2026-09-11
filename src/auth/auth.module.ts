@@ -1,66 +1,87 @@
-import { DynamicModule, MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import {
+  DynamicModule,
+  Logger,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  OnModuleInit,
+} from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
-import { JwtModule } from "@nestjs/jwt";
-import { UsersModule } from "../users/users.module";
+import { PrismaClient } from "@prisma/client";
+import supertokens from "supertokens-node";
 import { AuthApiController } from "./auth.api.controller";
 import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
-import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { buildSuperTokensConfig, ensureRolesExist } from "./config/supertokens.config";
 import { RolesGuard } from "./guards/roles.guard";
-import { AUTH_MODULE_OPTIONS, AuthModuleOptions } from "./interfaces/auth-module-options.interface";
-import { CurrentUserMiddleware } from "./middleware/current-user.middleware";
+import { SessionAuthGuard } from "./guards/session-auth.guard";
+import { SuperTokensModuleOptions } from "./interfaces/supertokens-module-options.interface";
+import { SessionInfoMiddleware } from "./middleware/session-info.middleware";
 
 // Динамический модуль (см. https://docs.nestjs.com/modules#dynamic-modules,
-// на который прямо ссылается задание ЛР7): конфигурация — секрет/срок
-// жизни JWT, имя cookie — читается из переменных окружения один раз при
-// старте приложения (см. AuthModule.register(...) в AppModule) и
-// передаётся статическим методом, а не читается напрямую внутри
-// AuthService/гвардов через process.env.
+// на который прямо ссылается задание ЛР7): конфигурация — connection URI,
+// API-ключ, домены приложения — читается из переменных окружения один раз
+// при старте (см. AuthModule.forRoot(...) в AppModule) и передаётся сюда
+// статическим методом, а не читается напрямую внутри auth.module/config.
+//
+// supertokens.init(...) — глобальный побочный эффект самой библиотеки
+// (SDK хранит конфигурацию в module-level синглтоне), поэтому выполняется
+// синхронно прямо в forRoot(), на этапе регистрации модуля — раньше, чем
+// поднимется контейнер Nest DI.
 @Module({})
-export class AuthModule implements NestModule {
-  static register(options: AuthModuleOptions): DynamicModule {
+export class AuthModule implements NestModule, OnModuleInit {
+  private static readonly logger = new Logger("AuthModule");
+
+  static forRoot(options: SuperTokensModuleOptions): DynamicModule {
+    // Отдельный экземпляр PrismaClient — только для override-хуков SDK
+    // (см. supertokens.config.ts): на момент supertokens.init() обычный
+    // @Inject(PrismaService) ещё недоступен, DI-контейнер не поднят.
+    const prisma = new PrismaClient();
+
+    supertokens.init(buildSuperTokensConfig(options, prisma));
+
     return {
       module: AuthModule,
-      // global: true — req.user и AuthService должны быть доступны из
-      // любого модуля приложения (гварды, другие поддомены), без того,
-      // чтобы каждый из них явно импортировал AuthModule.
+      // global: true — RolesGuard/SessionAuthGuard и декораторы должны
+      // работать в любом модуле приложения без явного импорта AuthModule.
       global: true,
-      imports: [
-        UsersModule,
-        JwtModule.register({
-          secret: options.jwtSecret,
-          // jsonwebtoken типизирует expiresIn узким литеральным типом
-          // (branded string из пакета "ms"), а не произвольной строкой —
-          // значение приходит из переменной окружения JWT_EXPIRES_IN, чей
-          // тип на этапе компиляции сузить нельзя.
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          signOptions: { expiresIn: options.jwtExpiresIn as any },
-        }),
-      ],
       controllers: [AuthController, AuthApiController],
       providers: [
-        { provide: AUTH_MODULE_OPTIONS, useValue: options },
-        AuthService,
         // Оба гварда — глобальные (APP_GUARD), порядок регистрации важен:
-        // JwtAuthGuard проверяет сам факт аутентификации (пропускает
+        // SessionAuthGuard проверяет сам факт аутентификации (пропускает
         // помеченные @PublicAccess()), RolesGuard — требуемую роль
-        // (@Roles(...)) и рассчитывает на то, что request.user уже
+        // (@Roles(...)) и рассчитывает на то, что request.session уже
         // провалидирован первым гвардом.
-        { provide: APP_GUARD, useClass: JwtAuthGuard },
+        { provide: APP_GUARD, useClass: SessionAuthGuard },
         { provide: APP_GUARD, useClass: RolesGuard },
       ],
-      exports: [AuthService, AUTH_MODULE_OPTIONS, JwtModule],
     };
   }
 
-  // CurrentUserMiddleware подключён глобально ("*") — он нужен не только
+  // SessionInfoMiddleware подключён глобально ("*") — он нужен не только
   // гвардам на защищённых маршрутах, но и вьюшкам: шапка сайта показывает
-  // состояние сессии ("Вы вошли как..." / "Войти") на КАЖДОЙ странице.
-  // Middleware для редиректа на форму входа (RequireLoginMiddleware)
-  // подключается точечно, через MiddlewareConsumer конкретных модулей —
-  // см. TrainersModule/MembershipsModule/ProductsModule/UsersModule/
-  // ReviewsModule.
+  // состояние сессии на КАЖДОЙ странице. Middleware для редиректа на форму
+  // входа (RequireLoginMiddleware) подключается точечно, через
+  // MiddlewareConsumer конкретных модулей — см. Trainers/Memberships/
+  // Products/Reviews/UsersModule.
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CurrentUserMiddleware).forRoutes("*");
+    consumer.apply(SessionInfoMiddleware).forRoutes("*");
+  }
+
+  // Роли ("USER"/"ADMIN") должны существовать в SuperTokens ДО того, как
+  // кто-то попробует их назначить (UserRoles.addRoleToUser упадёт с
+  // UNKNOWN_ROLE_ERROR на несуществующей роли) — заводим их один раз при
+  // старте приложения. Обращение к Core — сетевая операция, поэтому здесь,
+  // а не синхронно в forRoot(); ошибку не считаем фатальной для всего
+  // приложения (например, Core временно недоступен) — только логируем.
+  async onModuleInit() {
+    try {
+      await ensureRolesExist();
+    } catch (error) {
+      AuthModule.logger.warn(
+        `Не удалось создать роли в SuperTokens при старте (проверьте SUPERTOKENS_CONNECTION_URI/SUPERTOKENS_API_KEY): ${
+          (error as Error).message
+        }`,
+      );
+    }
   }
 }

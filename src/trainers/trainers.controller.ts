@@ -46,7 +46,7 @@ export class TrainersController {
       title: "Тренеры - PowerGit Gym",
       activePage: "trainers",
       user: req.user,
-      isAdmin: req.user?.role === Role.ADMIN,
+      isAdmin: req.user?.isAdmin ?? false,
       trainers,
     };
   }
@@ -93,7 +93,7 @@ export class TrainersController {
       title: `${trainer.name} - Тренер`,
       activePage: "trainers",
       user: req.user,
-      isAdmin: req.user?.role === Role.ADMIN,
+      isAdmin: req.user?.isAdmin ?? false,
       trainer,
     };
   }
