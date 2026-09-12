@@ -126,6 +126,16 @@ export function buildSuperTokensConfig(
         },
       }),
       Session.init({
+        // Проект — классический серверный сайт (Handlebars + обычный
+        // fetch() в public/js/auth-forms.js), а не SPA с официальным
+        // фронтенд-SDK SuperTokens (supertokens-web-js/auth-react). Эти SDK
+        // сами добавляют заголовок "st-auth-mode: cookie" к каждому запросу;
+        // без него (как у нас) SDK по умолчанию решает, что клиент ожидает
+        // токен в заголовках ответа, а не в cookie (см. defaultGetTokenTransferMethod
+        // в supertokens-node) — из-за этого сессия молча не сохранялась в
+        // браузере ни после регистрации, ни после входа. Жёстко фиксируем
+        // "cookie" как единственный способ передачи токена.
+        getTokenTransferMethod: () => "cookie",
         override: {
           functions: (originalImplementation) => ({
             ...originalImplementation,
