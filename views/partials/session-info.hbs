@@ -1,9 +1,14 @@
 <div class="session-info">
     {{#if user}}
-    <span class="session-info-text">Вы вошли как <strong>{{user.name}}</strong></span>
-    <a class="submit-btn session-info-btn" href="?auth=false">Выйти</a>
+    <span class="session-info-text">
+        Вы вошли как <strong>{{#if user.name}}{{user.name}}{{else}}{{user.email}}{{/if}}</strong>
+        {{#if user.isAdmin}}<span class="role-badge">Администратор</span>{{/if}}
+    </span>
+    <a class="submit-btn session-info-btn" href="/profile">Профиль</a>
+    <button type="button" id="logout-btn" class="submit-btn session-info-btn">Выйти</button>
     {{else}}
     <span class="session-info-text">Вы не авторизованы</span>
-    <a class="submit-btn session-info-btn" href="?auth=true">Войти</a>
+    <a class="submit-btn session-info-btn" href="/login">Войти</a>
+    <a class="submit-btn session-info-btn" href="/register">Регистрация</a>
     {{/if}}
 </div>

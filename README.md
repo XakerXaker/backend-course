@@ -19,6 +19,11 @@
 - [Prisma ORM](https://www.prisma.io/) — доступ к данным и миграции
 - [class-validator / class-transformer](https://github.com/typestack/class-validator) — валидация DTO
 - [Swagger (OpenAPI)](https://docs.nestjs.com/openapi/introduction) — спецификация REST API
+- [GraphQL / Apollo Server](https://docs.nestjs.com/graphql/quick-start) — альтернативный API (code-first)
+- [RxJS](https://rxjs.dev/) — перехватчики (`TimingInterceptor`, `EtagInterceptor`), SSE
+- [@nestjs/cache-manager](https://docs.nestjs.com/techniques/caching) — серверное in-memory кэширование
+- [AWS SDK для JavaScript (`@aws-sdk/client-s3`)](https://yandex.cloud/ru/docs/storage/tools/aws-sdk-js) — загрузка файлов в Yandex Object Storage
+- [SuperTokens](https://supertokens.com/) (`supertokens-node`) — аутентификация/авторизация как услуга: recipe EmailPassword/Session/UserRoles (см. раздел «ЛР7»)
 
 ## Запуск локально
 
@@ -38,13 +43,26 @@
    npx prisma generate
    ```
 
-2. Создайте файл `.env` в корне проекта и укажите строку подключения к БД
+2. Скопируйте `.env.example` в `.env` и укажите строку подключения к БД
    (Internal/External Database URL от Render, либо строка подключения Aiven,
    либо локальный PostgreSQL):
 
    ```env
    DATABASE_URL="postgresql://user:password@host:5432/dbname"
    ```
+
+   Переменные `S3_*` (Yandex Object Storage, загрузка фото тренеров —
+   см. раздел «ЛР6») нужны только для эндпоинтов загрузки файлов; без них
+   остальное приложение работает как обычно, а запрос на загрузку фото
+   вернёт ошибку обращения к хранилищу.
+
+   Переменные `SUPERTOKENS_*`/`API_DOMAIN`/`WEBSITE_DOMAIN` (аутентификация,
+   см. раздел «ЛР7») нужны для регистрации/входа — заполните их своим
+   Connection URI и API-ключом от [supertokens.com](https://supertokens.com/)
+   (Managed Service, раздел Development вашего проекта) либо адресом
+   самостоятельно развёрнутого Core. Без них всё остальное приложение
+   (просмотр каталога, отзывы) по-прежнему работает — упадут только
+   запросы, которым нужна сессия.
 
 3. Примените миграции Prisma к базе данных:
 
@@ -72,15 +90,19 @@
 src/
 ├── app.controller.ts     # общие страницы, не относящиеся к поддоменам (главная, О нас, Оснащение, Контакты)
 ├── app.module.ts
-├── common/                # общие DTO и глобальный exception filter
+├── auth/                  # аутентификация/авторизация (ЛР7): динамический AuthModule + SuperTokens (Guards/Middleware)
+├── common/                # общие DTO, глобальный exception filter, перехватчики (Timing/Etag)
 ├── prisma/                # инфраструктурный слой доступа к БД (PrismaService/PrismaModule)
-├── trainers/               # поддомен "Тренеры": MVC ("/trainers") + REST API ("/api/trainers") + SSE
+├── storage/               # инфраструктурный слой объектного хранилища (StorageService/StorageModule, S3)
+├── graphql/               # общие GraphQL-хелперы (пагинация, сложность запроса) — см. ЛР5
+├── trainers/               # поддомен "Тренеры": MVC ("/trainers") + REST API ("/api/trainers") + SSE + загрузка фото
 ├── memberships/            # поддомен "Абонементы": MVC ("/pricing") + REST API ("/api/memberships")
 ├── products/               # поддомен "Питание": MVC ("/nutrition") + REST API ("/api/products")
-├── users/                  # поддомен "Участники": MVC ("/users") + REST API ("/api/users")
+├── users/                  # поддомен "Участники": MVC ("/users", админ) + REST API ("/api/users") + self-service "/profile"
 └── reviews/                # поддомен "Отзывы": MVC ("/reviews") + REST API ("/api/reviews")
 views/
 ├── layouts/main.hbs        # общий layout страницы
+├── auth/                    # страницы входа/регистрации (ЛР7)
 └── partials/                # переиспользуемые части: head-assets, header, nav, session-info, footer, карточки
 ```
 
@@ -156,6 +178,7 @@ erDiagram
         String passwordHash
         String name
         String phone
+        Enum role "USER | ADMIN, см. ЛР7"
         DateTime createdAt
         String membershipId FK
     }
@@ -325,3 +348,157 @@ erDiagram
   поля.
 - Подробный отчёт, Postman-коллекция на все пять поддоменов и инструкция
   по проверке — в [`docs/lab4`](./docs/lab4).
+
+### ЛР5. Схема GraphQL
+
+- Подключён GraphQL code-first (`@nestjs/graphql`, `@nestjs/apollo`,
+  Apollo Server) — схема (`src/graphql/schema.gql`) собирается из
+  декораторов `@ObjectType`/`@InputType`/`@Resolver`, песочница — Apollo
+  Sandbox (не устаревший GraphQL Playground).
+- Для каждого из пяти поддоменов — свой `*.resolver.ts` и подпапка
+  `graphql/` рядом с `dto/`/`entities/`; `Update*Input` порождается из
+  `Create*Input` через `PartialType`/`OmitType`, а не копированием полей.
+- Доменные переходы состояния — отдельными мутациями, а не общим `update`:
+  `restockProduct`/`sellProduct` (остаток товара),
+  `changeUserPassword`, `assignMembership`/`cancelMembership`.
+- Вложенные сущности — через field resolver (`Membership.users`,
+  `User.membership`, `User.reviews`, `Review.author`), с постраничным
+  дженериком `Paginated<T>` (`src/graphql/paginated.type.ts`).
+- Подсчёт сложности запроса (`graphql-query-complexity`) и отклонение
+  слишком тяжёлых запросов ещё до выполнения резолверов
+  (`src/graphql/complexity.ts`, плагин Apollo в `src/app.module.ts`).
+- Подробный отчёт и примеры запросов — в [`docs/lab5`](./docs/lab5).
+
+### ЛР6. Возможности NestJS для BFF: время обработки, кэширование, файлы
+
+**Измерение времени обработки запроса**
+
+- `TimingInterceptor` (`src/common/interceptors/timing.interceptor.ts`) —
+  реактивный перехватчик на RxJS (`tap`, без `async/await`), подключён
+  глобально в `main.ts`. Логирует время каждого запроса и возвращает его
+  клиенту двумя способами в зависимости от типа маршрута:
+  - страница (`@Render(...)`) — время кладётся прямо в модель
+    представления (`elapsedTimeMs`); `views/partials/footer.hbs` выводит
+    его в `data`-атрибут, а `public/js/main.js` показывает его рядом со
+    временем, измеренным в браузере (`performance.now()`), — единая
+    строка вида «Время загрузки страницы: 42 мс (обработка на сервере:
+    6 мс)»;
+  - RESTful API и GraphQL — время уходит в заголовок ответа
+    `X-Elapsed-Time`. Для GraphQL пришлось явно прокинуть объект ответа
+    Express в контекст резолверов (`context: ({ req, res }) => ({ req, res
+    })` в `GraphQLModule`, `src/app.module.ts`) — по умолчанию
+    `@nestjs/apollo` кладёт в контекст только `req`.
+
+**Кэширование ответов**
+
+- Клиент: `EtagInterceptor` (`src/common/interceptors/etag.interceptor.ts`)
+  считает SHA-1 от тела GET-ответов REST API и выставляет заголовок
+  `ETag`; дальше условный `GET` (`If-None-Match`) целиком обрабатывает сам
+  Express (модуль `fresh`, используется внутри `res.json()`/`res.send()`)
+  — перехватчику не нужно вручную обрывать поток и отдавать `304`.
+  `Cache-Control` (`private, max-age=60, must-revalidate`) проставлен
+  декоратором `@Header(...)` на все "читающие" эндпоинты пяти
+  `*.api.controller.ts` — сочетание обоих заголовков позволяет браузеру
+  не ходить на сервер целую минуту, а после этого — получить пустой `304`,
+  если данные не изменились.
+- Сервер: стандартный `CacheModule` (`@nestjs/cache-manager`, in-memory
+  стор по умолчанию) подключён только в `TrainersModule` — тренеры
+  выбраны как самая часто читаемая сущность приложения (используются на
+  главной странице, странице контактов и в собственном разделе с SSE).
+  `GET /api/trainers` и `GET /api/trainers/:id`
+  (`src/trainers/trainers.api.controller.ts`) обёрнуты в
+  `@UseInterceptors(CacheInterceptor)` с `@CacheTTL(5000)` — пять секунд
+  осознанно выбраны короткими, чтобы не заниматься ручной инвалидацией
+  при создании/редактировании тренера. Проверено вручную: подряд
+  отправленные запросы после создания тренера первые ~5 секунд
+  возвращают старый список (`X-Elapsed-Time: 0`), затем автоматически
+  подхватывают изменение.
+- Порядок глобальных перехватчиков в `main.ts` важен:
+  `TimingInterceptor` — снаружи, чтобы измерить весь конвейер, включая
+  попадание в серверный кэш, `EtagInterceptor` — внутри него.
+
+**Загрузка файлов в объектное хранилище**
+
+- Инфраструктурный модуль `StorageModule`/`StorageService`
+  (`src/storage`) — та же роль, что у `PrismaService` для базы данных:
+  инкапсулирует AWS SDK (`@aws-sdk/client-s3`) и настройки конкретного
+  провайдера (Yandex Object Storage, S3-совместимый API) за одним
+  сервисом с методом `uploadFile()`, а не размазывает клиент S3 по
+  контроллерам. Настройки — переменные окружения `S3_*` (см.
+  `.env.example`).
+- Фото тренера (`Trainer.photoUrl`) — единственное поле с файлом в
+  домене — теперь реально загружается в хранилище, а не вводится
+  вручную как ссылка:
+  - MVC-форма (`views/trainers/form.hbs`, добавление и редактирование
+    тренера) — вместо текстового поля "URL фотографии" теперь `<input
+    type="file">`, форма отправляется как `multipart/form-data`
+    (`TrainersController.create`/`updateFromForm`,
+    `FileInterceptor('photo')`); если файл не передан при
+    редактировании — текущее фото не трогается.
+  - REST API — отдельный эндпоинт `POST /api/trainers/:id/photo`
+    (`TrainersApiController.uploadPhoto`), тоже `multipart/form-data`,
+    поле `photo`.
+  - Валидация файла по документации NestJS —
+    `ParseFilePipeBuilder().addFileTypeValidator(...).addMaxSizeValidator(...)`:
+    только `image/jpeg|png|webp|gif`, не более 5 МБ.
+
+Подробный отчёт с примерами проверки (`curl`) — в [`docs/lab6`](./docs/lab6).
+
+### ЛР7. Аутентификация и авторизация
+
+- Аутентификация вынесена стороннему поставщику —
+  [SuperTokens](https://supertokens.com/) (`supertokens-node`, recipe
+  EmailPassword/Session/UserRoles), а не реализована самостоятельно.
+  Оформлена **динамическим модулем** `src/auth`
+  (`AuthModule.forRoot({ connectionURI, apiKey, appName, apiDomain,
+  websiteDomain })`), конфигурация которого читается из переменных
+  окружения (`SUPERTOKENS_CONNECTION_URI`, `SUPERTOKENS_API_KEY`,
+  `APP_NAME`, `API_DOMAIN`, `WEBSITE_DOMAIN`, см. `.env.example`) один раз
+  при старте в `src/app.module.ts`. Маршруты `/auth/signup`, `/auth/signin`,
+  `/auth/signout`, `/auth/session/refresh` генерирует сам SDK — вручную не
+  написаны.
+- Роль пользователя — `User.role` (`enum Role { USER ADMIN }`) на уже
+  существующей сущности `User` — зеркало для SQL/админ-панели; источник
+  истины при авторизации — клеймы сессии SuperTokens (recipe UserRoles).
+  Поле `passwordHash`, наоборот, удалено из схемы — пароль хранит и
+  проверяет провайдер.
+- **Middleware**: `SessionInfoMiddleware` (глобально) читает сессию
+  SuperTokens и кладёт упрощённые данные пользователя в `request.user`, не
+  блокируя запрос при невалидном токене; `RequireLoginMiddleware` — тот
+  самый сценарий "неаутентифицированный посетитель запросил защищённую
+  страницу", подключён точечно через **Middleware Consumer** в
+  `configure()` модулей `Trainers/Memberships/Products/Reviews/UsersModule`.
+- **Guards**: `SessionAuthGuard` (аутентификация, обходится декоратором
+  `@PublicAccess()`) и `RolesGuard` (авторизация по ролям через
+  `UserRoleClaim`, декоратор `@Roles(Role.ADMIN)`) — оба подключены
+  **глобально** (`APP_GUARD`).
+- **Swagger**: схема `cookie` (имя `sAccessToken`, cookie сессии
+  SuperTokens) и `@ApiCookieAuth()` на защищённых методах. **CORS**
+  донастроен под протокол провайдера
+  (`supertokens.getAllCORSHeaders()`); `bodyParser: false` при создании
+  приложения — SuperTokens сам разбирает тело запроса для своих
+  маршрутов, обычный `express.json()` подключается вручную сразу после.
+- `UsersService` — единственная точка, где домен обращается к SDK:
+  регистрация (`EmailPassword.signUp`), смена email/пароля
+  (`updateEmailOrPassword`), удаление аккаунта (`supertokens.deleteUser`),
+  назначение роли (`UserRoles.addRoleToUser`/`removeUserRole`) — сигнатуры
+  методов не изменились, поэтому GraphQL-резолвер (ЛР5) и MVC/REST
+  контроллеры продолжили работать без правок.
+- Публичная самостоятельная регистрация (`/register` → `POST
+  /auth/signup`) отделена от административной панели управления учётными
+  записями (`/users`, `/api/users` — доступна только роли `ADMIN`, включая
+  назначение роли); собственные данные и пароль пользователь меняет на
+  `/profile` (`ProfileController`, свой маршрут, не автогенерируемый SDK).
+  Прежняя имитация сессии через query-параметр `?auth=true|false` полностью
+  убрана — состояние сессии везде реальное, включая скрытие кнопок
+  "Редактировать"/"Удалить" от гостей и обычных пользователей.
+- ⚠️ Среда, в которой выполнялась разработка, блокирует egress-политикой
+  все хосты `*.supertokens.io` (Docker-реестр, публичный demo-core и даже
+  персональный Managed-инстанс) — поэтому живой цикл регистрация → вход →
+  защищённый доступ → смена роли проверен лишь частично (всё, что не
+  требует обращения к Core: маршрутизация, guards, redirect, обработка
+  ошибок, body-parsing — подтверждено запросами к реально поднятому
+  приложению). Подробности и инструкция по проверке в среде с доступом к
+  supertokens.com — в отчёте.
+
+Подробный отчёт с примерами проверки (`curl`) — в [`docs/lab7`](./docs/lab7).

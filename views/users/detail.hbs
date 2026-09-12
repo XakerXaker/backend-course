@@ -6,6 +6,18 @@
     <p><strong>Телефон:</strong> {{member.phone}}</p>
     {{/if}}
     <p><strong>Дата регистрации:</strong> {{formatDate member.createdAt}}</p>
+    <p><strong>Роль:</strong> {{#if (eq member.role "ADMIN")}}Администратор{{else}}Обычный пользователь{{/if}}</p>
+
+    <form class="simple-form" method="post" action="/users/{{member.id}}/role">
+      <div class="form-group">
+        <label for="role">Изменить роль</label>
+        <select id="role" name="role">
+          <option value="USER" {{#if (eq member.role "USER")}}selected{{/if}}>Обычный пользователь</option>
+          <option value="ADMIN" {{#if (eq member.role "ADMIN")}}selected{{/if}}>Администратор</option>
+        </select>
+      </div>
+      <button type="submit" class="submit-btn">Сохранить роль</button>
+    </form>
 
     <h3>Абонемент</h3>
     {{#if member.membership}}
@@ -32,8 +44,8 @@
     {{/if}}
 
     <div class="trainer-detail-actions">
-      <a class="submit-btn" href="/users/{{member.id}}/edit?auth={{auth}}">Редактировать</a>
-      <a class="submit-btn" href="/users?auth={{auth}}">К списку</a>
+      <a class="submit-btn" href="/users/{{member.id}}/edit">Редактировать</a>
+      <a class="submit-btn" href="/users">К списку</a>
     </div>
   </section>
 </main>

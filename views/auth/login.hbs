@@ -1,0 +1,23 @@
+<main>
+  <section id="login-form-section">
+    <h2>Вход</h2>
+
+    <p class="form-error" id="login-error" hidden></p>
+
+    <form class="simple-form" id="login-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required autofocus />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Пароль</label>
+        <input id="password" name="password" type="password" minlength="8" required />
+      </div>
+
+      <button type="submit" class="submit-btn">Войти</button>
+    </form>
+
+    <p class="auth-switch-link">Ещё нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+  </section>
+</main>

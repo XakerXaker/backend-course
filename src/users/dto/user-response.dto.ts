@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { Role } from "@prisma/client";
 import { MembershipSummaryDto } from "../../memberships/dto/membership-response.dto";
 
 class UserReviewSummaryDto {
@@ -29,6 +30,9 @@ export class UserResponseDto {
 
   @ApiPropertyOptional({ example: "+7 900 123-45-67" })
   phone?: string | null;
+
+  @ApiProperty({ enum: Role, example: Role.USER })
+  role: Role;
 
   @ApiProperty({ example: "2026-04-06T12:30:00.000Z" })
   createdAt: Date;

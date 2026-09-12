@@ -1,0 +1,34 @@
+<main>
+  <section id="register-form-section">
+    <h2>Регистрация</h2>
+
+    <p class="form-error" id="register-error" hidden></p>
+
+    <form class="simple-form" id="register-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required autofocus />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Пароль</label>
+        <input id="password" name="password" type="password" minlength="8" required />
+        <p class="form-hint">Не короче 8 символов, минимум одна буква и одна цифра</p>
+      </div>
+
+      <div class="form-group">
+        <label for="name">Имя</label>
+        <input id="name" name="name" type="text" />
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Телефон</label>
+        <input id="phone" name="phone" type="tel" />
+      </div>
+
+      <button type="submit" class="submit-btn">Зарегистрироваться</button>
+    </form>
+
+    <p class="auth-switch-link">Уже есть аккаунт? <a href="/login">Войти</a></p>
+  </section>
+</main>

@@ -1,11 +1,19 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { randomBytes, scryptSync } from "crypto";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { Role } from "@prisma/client";
+import supertokens from "supertokens-node";
+import EmailPassword from "supertokens-node/recipe/emailpassword";
+import UserRoles from "supertokens-node/recipe/userroles";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 
-// Явный select без passwordHash — хеш пароля не должен покидать сервис ни
-// через MVC, ни (что особенно важно) через JSON REST API. Экспортируется,
+// Приложение не использует multi-tenancy — "public" это зарезервированное
+// имя дефолтного тенанта в SuperTokens, а не наша строка (см. комментарий
+// в src/auth/config/supertokens.config.ts).
+const DEFAULT_TENANT_ID = "public";
+
+// Явный select без полей учётных данных (их у нас в базе больше нет —
+// пароль и его проверка целиком переданы SuperTokens, ЛР7) — экспортируется,
 // чтобы MembershipsService мог применить тот же select к дочерней
 // коллекции участников абонемента (см. findUsers/findUser).
 export const SAFE_USER_SELECT = {
@@ -13,6 +21,7 @@ export const SAFE_USER_SELECT = {
   email: true,
   name: true,
   phone: true,
+  role: true,
   createdAt: true,
   updatedAt: true,
   membershipId: true,
@@ -73,11 +82,27 @@ export class UsersService {
     return user;
   }
 
+  // Регистрация участника администратором (панель /users, /api/users).
+  // Пароль и учётные данные заводятся в SuperTokens тем же способом, что и
+  // при публичной самостоятельной регистрации (POST /auth/signup) — единая
+  // точка правды: EmailPassword.signUp(...). Override
+  // recipe-функции signUp (см. src/auth/config/supertokens.config.ts) уже
+  // создаёт минимальную запись User (id/email/role=USER) — здесь остаётся
+  // только дозаполнить поля, специфичные для этой формы.
   async create(createUserDto: CreateUserDto) {
-    return this.prisma.user.create({
+    const result = await EmailPassword.signUp(
+      DEFAULT_TENANT_ID,
+      createUserDto.email,
+      createUserDto.password,
+    );
+
+    if (result.status === "EMAIL_ALREADY_EXISTS_ERROR") {
+      throw new ConflictException("Участник с таким email уже зарегистрирован");
+    }
+
+    return this.prisma.user.update({
+      where: { id: result.user.id },
       data: {
-        email: createUserDto.email,
-        passwordHash: this.hashPassword(createUserDto.password),
         name: createUserDto.name,
         phone: createUserDto.phone,
         membershipId: createUserDto.membershipId ?? null,
@@ -89,13 +114,27 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto) {
     await this.findOne(id);
 
+    // Email/пароль — учётные данные, ими распоряжается SuperTokens; меняем
+    // ИХ первыми и только при успехе трогаем нашу (зеркальную) запись —
+    // иначе два хранилища могут разойтись (например, email обновился у нас,
+    // но не прошёл валидацию уникальности у провайдера).
+    if (updateUserDto.email !== undefined || updateUserDto.password !== undefined) {
+      const recipeUserId = supertokens.convertToRecipeUserId(id);
+      const result = await EmailPassword.updateEmailOrPassword({
+        recipeUserId,
+        email: updateUserDto.email,
+        password: updateUserDto.password,
+      });
+
+      if (result.status === "EMAIL_ALREADY_EXISTS_ERROR") {
+        throw new ConflictException("Участник с таким email уже зарегистрирован");
+      }
+    }
+
     return this.prisma.user.update({
       where: { id },
       data: {
         ...(updateUserDto.email !== undefined && { email: updateUserDto.email }),
-        ...(updateUserDto.password !== undefined && {
-          passwordHash: this.hashPassword(updateUserDto.password),
-        }),
         ...(updateUserDto.name !== undefined && { name: updateUserDto.name }),
         ...(updateUserDto.phone !== undefined && { phone: updateUserDto.phone }),
         ...(updateUserDto.membershipId !== undefined && {
@@ -108,6 +147,11 @@ export class UsersService {
 
   async remove(id: string) {
     await this.findOne(id);
+
+    // Сначала — учётная запись и все активные сессии у провайдера, потом —
+    // наша зеркальная запись; в обратном порядке можно было бы остаться с
+    // "осиротевшим" логином без профиля в случае сбоя между операциями.
+    await supertokens.deleteUser(id);
 
     return this.prisma.user.delete({
       where: { id },
@@ -151,15 +195,52 @@ export class UsersService {
     return { items, page: safePage, limit: safeLimit, total, totalPages };
   }
 
-  // Смена пароля — отдельная от общего updateUser доменная операция
-  // (аналог "publish"/"hide" из задания ЛР5 для полей-переходов состояния),
-  // а не значение среди прочих в общем UpdateUserInput.
-  async changePassword(id: string, newPassword: string) {
+  // Проверка ТЕКУЩЕГО пароля — используется ProfileController перед сменой
+  // собственного пароля (в отличие от changePassword ниже, которым
+  // администратор меняет пароль ЛЮБОГО участника без его подтверждения).
+  async verifyCurrentPassword(email: string, password: string): Promise<boolean> {
+    const result = await EmailPassword.verifyCredentials(DEFAULT_TENANT_ID, email, password);
+
+    return result.status === "OK";
+  }
+
+  // Смена роли — отдельная доменная операция (см. changePassword ниже):
+  // выдаётся только администратором через UsersController/UsersApiController.
+  // Роль в системе одна из двух одновременно, поэтому явно снимаем
+  // противоположную — recipe UserRoles допускает у пользователя сразу
+  // несколько ролей, а наш домен этого не предполагает.
+  async changeRole(id: string, role: Role) {
     await this.findOne(id);
+
+    const previousRole = role === Role.ADMIN ? Role.USER : Role.ADMIN;
+
+    await UserRoles.removeUserRole(DEFAULT_TENANT_ID, id, previousRole);
+    await UserRoles.addRoleToUser(DEFAULT_TENANT_ID, id, role);
 
     return this.prisma.user.update({
       where: { id },
-      data: { passwordHash: this.hashPassword(newPassword) },
+      data: { role },
+      select: SAFE_USER_SELECT,
+    });
+  }
+
+  // Смена пароля АДМИНИСТРАТОРОМ — без проверки текущего пароля (аналог
+  // "publish"/"hide" из задания ЛР5 для полей-переходов состояния), а не
+  // значение среди прочих в общем UpdateUserDto.
+  async changePassword(id: string, newPassword: string) {
+    await this.findOne(id);
+
+    await EmailPassword.updateEmailOrPassword({
+      recipeUserId: supertokens.convertToRecipeUserId(id),
+      password: newPassword,
+    });
+
+    // Пароль хранится у провайдера, а не в нашей таблице — в Prisma здесь
+    // менять нечего, но метод, как и остальные в этом сервисе, возвращает
+    // актуальный безопасный профиль участника.
+    return this.prisma.user.update({
+      where: { id },
+      data: {},
       select: SAFE_USER_SELECT,
     });
   }
@@ -200,12 +281,5 @@ export class UsersService {
     }
 
     return review;
-  }
-
-  private hashPassword(password: string): string {
-    const salt = randomBytes(16).toString("hex");
-    const derivedKey = scryptSync(password, salt, 64).toString("hex");
-
-    return `${salt}:${derivedKey}`;
   }
 }

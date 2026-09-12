@@ -6,8 +6,15 @@
 
     const footer = document.querySelector("footer");
     if (footer) {
+      // Серверное время кладёт TimingInterceptor в модель представления
+      // (elapsedTimeMs), footer.hbs выводит его в data-атрибут — здесь оно
+      // просто читается и показывается рядом с клиентским.
+      const serverTime = footer.dataset.serverElapsedTime;
+
       const loadInfo = document.createElement("p");
-      loadInfo.textContent = `Время загрузки страницы: ${loadTime} мс`;
+      loadInfo.textContent = serverTime
+        ? `Время загрузки страницы: ${loadTime} мс (обработка на сервере: ${serverTime} мс)`
+        : `Время загрузки страницы: ${loadTime} мс`;
       loadInfo.style.fontSize = "12px";
       loadInfo.style.marginTop = "10px";
       loadInfo.style.opacity = "0.8";

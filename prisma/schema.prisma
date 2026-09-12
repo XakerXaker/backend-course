@@ -8,14 +8,20 @@ datasource db {
 }
 
 model User {
-  id           String      @id @default(uuid())
+  id           String      @id
   email        String      @unique
-  passwordHash String
   name         String?
   phone        String?
+  // Роль в системе (ЛР7): USER — обычный аутентифицированный участник,
+  // ADMIN — доступны служебные страницы и методы API управления каталогом
+  // (тренеры/абонементы/питание) и учётными записями других пользователей.
+  // Копия роли, назначенной через UserRoles recipe SuperTokens (источник
+  // истины при авторизации, см. src/auth/guards/roles.guard.ts) — здесь
+  // хранится для удобных SQL-запросов/отображения в админ-панели.
+  role         Role        @default(USER)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
-  
+
   // Связи
   membershipId String?
   membership   Membership? @relation(fields: [membershipId], references: [id])
@@ -98,6 +104,11 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
   
   @@unique([orderId, productId])
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 enum Category {

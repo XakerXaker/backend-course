@@ -1,10 +1,16 @@
-import { Body, Controller, Get, Param, Post, Query, Render, Res } from "@nestjs/common";
-import { Response } from "express";
+import { Body, Controller, Get, Param, Post, Render, Req, Res } from "@nestjs/common";
+import { Role } from "@prisma/client";
+import { Request, Response } from "express";
+import { PublicAccess } from "../auth/decorators/public.decorator";
+import { Roles } from "../auth/decorators/roles.decorator";
 import { UsersService } from "../users/users.service";
 import { CreateReviewDto } from "./dto/create-review.dto";
 import { UpdateReviewDto } from "./dto/update-review.dto";
 import { ReviewsService } from "./reviews.service";
 
+// Список отзывов и форма добавления — публичные (гостевой отзыв, см.
+// домен Review из ЛР2); редактирование/удаление — модерация, доступна
+// только администратору (ЛР7).
 @Controller("reviews")
 export class ReviewsController {
   constructor(
@@ -14,37 +20,31 @@ export class ReviewsController {
     private readonly usersService: UsersService,
   ) {}
 
-  private getUser(auth: string) {
-    if (auth === "true") {
-      return { name: "Иван Иванов", email: "ivan@powergitgym.ru" };
-    }
-    return null;
-  }
-
   @Get()
+  @PublicAccess()
   @Render("reviews/list")
-  async getCollectionPage(@Query("auth") auth: string) {
+  async getCollectionPage(@Req() req: Request) {
     const reviews = await this.reviewsService.findAll();
 
     return {
       title: "Отзывы - PowerGit Gym",
       activePage: "reviews",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
+      isAdmin: req.user?.isAdmin ?? false,
       reviews,
     };
   }
 
   @Get("add")
+  @PublicAccess()
   @Render("reviews/form")
-  async getCreatePage(@Query("auth") auth: string) {
+  async getCreatePage(@Req() req: Request) {
     return {
       title: "Оставить отзыв - PowerGit Gym",
       activePage: "reviews",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
       formTitle: "Оставить отзыв",
-      formAction: `/reviews?auth=${auth || "false"}`,
+      formAction: "/reviews",
       submitLabel: "Опубликовать",
       isEdit: false,
       authorOptions: await this.buildAuthorOptions(),
@@ -53,17 +53,17 @@ export class ReviewsController {
   }
 
   @Get(":id/edit")
+  @Roles(Role.ADMIN)
   @Render("reviews/form")
-  async getUpdatePage(@Param("id") id: string, @Query("auth") auth: string) {
+  async getUpdatePage(@Param("id") id: string, @Req() req: Request) {
     const review = await this.reviewsService.findOne(id);
 
     return {
       title: "Редактировать отзыв - PowerGit Gym",
       activePage: "reviews",
-      user: this.getUser(auth),
-      auth,
+      user: req.user,
       formTitle: "Редактирование отзыва",
-      formAction: `/reviews/${id}/edit?auth=${auth || "false"}`,
+      formAction: `/reviews/${id}/edit`,
       submitLabel: "Сохранить",
       isEdit: true,
       authorOptions: await this.buildAuthorOptions(review.authorId),
@@ -72,37 +72,31 @@ export class ReviewsController {
   }
 
   @Post()
-  async create(
-    @Body() createReviewDto: CreateReviewDto,
-    @Query("auth") auth: string,
-    @Res() res: Response,
-  ) {
+  @PublicAccess()
+  async create(@Body() createReviewDto: CreateReviewDto, @Res() res: Response) {
     await this.reviewsService.create(createReviewDto);
 
-    return res.redirect(`/reviews?auth=${auth || "false"}`);
+    return res.redirect("/reviews");
   }
 
   @Post(":id/edit")
+  @Roles(Role.ADMIN)
   async updateFromForm(
     @Param("id") id: string,
     @Body() updateReviewDto: UpdateReviewDto,
-    @Query("auth") auth: string,
     @Res() res: Response,
   ) {
     await this.reviewsService.update(id, updateReviewDto);
 
-    return res.redirect(`/reviews?auth=${auth || "false"}`);
+    return res.redirect("/reviews");
   }
 
   @Post(":id/delete")
-  async removeFromForm(
-    @Param("id") id: string,
-    @Query("auth") auth: string,
-    @Res() res: Response,
-  ) {
+  @Roles(Role.ADMIN)
+  async removeFromForm(@Param("id") id: string, @Res() res: Response) {
     await this.reviewsService.remove(id);
 
-    return res.redirect(`/reviews?auth=${auth || "false"}`);
+    return res.redirect("/reviews");
   }
 
   private async buildAuthorOptions(selectedId?: string | null) {

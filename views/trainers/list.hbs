@@ -21,11 +21,13 @@
                 <p>{{bio}}</p>
 
                 <div class="trainer-card-actions">
-                    <a href="/trainers/{{id}}?auth={{../auth}}">Открыть</a>
-                    <a href="/trainers/{{id}}/edit?auth={{../auth}}">Изменить</a>
-                    <form method="post" action="/trainers/{{id}}/delete?auth={{../auth}}">
+                    <a href="/trainers/{{id}}">Открыть</a>
+                    {{#if ../isAdmin}}
+                    <a href="/trainers/{{id}}/edit">Изменить</a>
+                    <form method="post" action="/trainers/{{id}}/delete">
                         <button type="submit" class="delete-btn">Удалить</button>
                     </form>
+                    {{/if}}
                 </div>
             </article>
             {{/each}}
@@ -34,9 +36,11 @@
         <p id="no-trainers-message">Пока нет тренеров. Добавьте первого через форму.</p>
         {{/if}}
 
+        {{#if isAdmin}}
         <div class="section-footer-actions">
-            <a class="submit-btn section-add-btn" href="/trainers/add?auth={{auth}}">Добавить тренера</a>
+            <a class="submit-btn section-add-btn" href="/trainers/add">Добавить тренера</a>
         </div>
+        {{/if}}
     </section>
 </main>
 
