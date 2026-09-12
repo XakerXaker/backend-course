@@ -32,6 +32,13 @@ import { UsersModule } from "./users/users.module";
         // схема из памяти.
         autoSchemaFile: join(process.cwd(), "src/graphql/schema.gql"),
         sortSchema: true,
+        // Apollo Server по умолчанию отключает интроспекцию схемы, когда
+        // NODE_ENV=production (так задеплоено, например, на Render) — без
+        // неё встроенная песочница не может построить панель схемы и
+        // подсказки автодополнения. Задание требует рабочую песочницу с
+        // возможностью открыть схему, поэтому включаем интроспекцию явно
+        // и в проде — это учебный проект, а не закрытый production API.
+        introspection: true,
         // По умолчанию @nestjs/apollo вне production поднимает устаревший
         // GraphQL Playground — отключаем его (playground: false) и вместо
         // этого подключаем встроенную песочницу Apollo Server (Apollo
