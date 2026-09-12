@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware } from "@nestjs/common";
+import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Response } from "express";
 import Session from "supertokens-node/recipe/session";
 import { UserRoleClaim } from "supertokens-node/recipe/userroles";
@@ -17,6 +17,8 @@ import { Role } from "@prisma/client";
 // "Вы вошли как ..." везде, а не только на защищённых страницах).
 @Injectable()
 export class SessionInfoMiddleware implements NestMiddleware {
+  private readonly logger = new Logger("SessionInfoMiddleware");
+
   async use(req: SessionRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const session = await Session.getSession(req, res, { sessionRequired: false });
@@ -34,10 +36,15 @@ export class SessionInfoMiddleware implements NestMiddleware {
           isAdmin: roles.includes(Role.ADMIN),
         };
       }
-    } catch {
-      // Просроченный/битый/поддельный токен — не блокируем запрос здесь,
-      // это не ответственность middleware (см. SessionAuthGuard): просто
-      // оставляем request.user незаполненным, дальше решает гвард.
+    } catch (error) {
+      // Просроченный/битый/поддельный токен — ожидаемо и не блокирует
+      // запрос (не ответственность middleware, см. SessionAuthGuard),
+      // но НЕИЗВЕСТНАЯ ошибка (например, cookie есть, а Core недоступен
+      // для проверки клеймов) раньше проглатывалась молча — теперь хотя бы
+      // видно в логе сервера, что реально происходит.
+      if (!Session.Error.isErrorFromSuperTokens(error)) {
+        this.logger.warn(`Не удалось прочитать сессию: ${(error as Error).message}`);
+      }
     }
 
     next();
