@@ -161,7 +161,7 @@ export class TrainersApiController {
   }
 
   @Post(":id/photo")
-  @UseInterceptors(FileInterceptor("photo"))
+  @UseInterceptors(FileInterceptor("photo", { limits: { fileSize: MAX_PHOTO_SIZE_BYTES } }))
   @ApiConsumes("multipart/form-data")
   @ApiOperation({
     summary: "Загрузить фото тренера в объектное хранилище",

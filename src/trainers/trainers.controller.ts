@@ -115,7 +115,7 @@ export class TrainersController {
   }
 
   @Post()
-  @UseInterceptors(FileInterceptor("photo"))
+  @UseInterceptors(FileInterceptor("photo", { limits: { fileSize: MAX_PHOTO_SIZE_BYTES } }))
   async create(
     @Body() createTrainerDto: CreateTrainerDto,
     @UploadedFile(
@@ -143,7 +143,7 @@ export class TrainersController {
   }
 
   @Post(":id/edit")
-  @UseInterceptors(FileInterceptor("photo"))
+  @UseInterceptors(FileInterceptor("photo", { limits: { fileSize: MAX_PHOTO_SIZE_BYTES } }))
   async updateFromForm(
     @Param("id") id: string,
     @Body() updateTrainerDto: UpdateTrainerDto,
