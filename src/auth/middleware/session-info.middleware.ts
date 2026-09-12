@@ -27,14 +27,28 @@ export class SessionInfoMiddleware implements NestMiddleware {
         req.session = session;
 
         const payload = session.getAccessTokenPayload() ?? {};
-        const roles = (await session.getClaimValue(UserRoleClaim)) ?? [];
-
         req.user = {
           id: session.getUserId(),
           email: typeof payload.email === "string" ? payload.email : null,
           name: typeof payload.name === "string" ? payload.name : null,
-          isAdmin: roles.includes(Role.ADMIN),
+          isAdmin: false,
         };
+
+        // Отдельный try/catch: в отличие от чтения payload (который уже есть
+        // в токене), клейм ролей при необходимости обновляется отдельным
+        // сетевым запросом к Core (см. UserRoles.init/getClaimValue). Раньше
+        // ошибка на этом шаге (например, кратковременная недоступность Core)
+        // отменяла req.user целиком — сессия оставалась валидной (гварды
+        // пропускали запрос), а шапка сайта всё равно показывала
+        // "Вы не авторизованы", потому что req.user так и не заполнялся.
+        try {
+          const roles = (await session.getClaimValue(UserRoleClaim)) ?? [];
+          req.user.isAdmin = roles.includes(Role.ADMIN);
+        } catch (roleError) {
+          this.logger.warn(
+            `Не удалось получить роли пользователя: ${(roleError as Error).message}`,
+          );
+        }
       }
     } catch (error) {
       // Просроченный/битый/поддельный токен — ожидаемо и не блокирует
