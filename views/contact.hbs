@@ -1,0 +1,37 @@
+<main>
+    <section id="contact">
+        <h2>Контакты и запись</h2>
+
+        <div class="contact-info">
+            <p><strong>Адрес:</strong> г. Москва, ул. Спортивная, 15</p>
+            <p><strong>Телефон:</strong> (495) 123-45-67</p>
+            <p><strong>Email:</strong> info@powergitgym.ru</p>
+            <p><strong>Время работы:</strong> 6:00 - 24:00</p>
+        </div>
+
+        <h3>Запись на тренировку</h3>
+
+        <form class="simple-form">
+            <div class="form-group">
+                <label>Ваше имя:</label>
+                <input type="text" required>
+            </div>
+
+            <div class="form-group">
+                <label>Ваш телефон:</label>
+                <input type="tel" required>
+            </div>
+
+            <div class="form-group">
+                <label>Выберите тренера:</label>
+                <select>
+                    {{#each trainers}}
+                    <option>{{this.name}}</option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <button type="submit" class="submit-btn">Отправить заявку</button>
+        </form>
+    </section>
+</main>

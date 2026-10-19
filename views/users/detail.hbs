@@ -1,0 +1,51 @@
+<main>
+  <section id="user-detail">
+    <h2>{{#if member.name}}{{member.name}}{{else}}{{member.email}}{{/if}}</h2>
+    <p><strong>Email:</strong> {{member.email}}</p>
+    {{#if member.phone}}
+    <p><strong>Телефон:</strong> {{member.phone}}</p>
+    {{/if}}
+    <p><strong>Дата регистрации:</strong> {{formatDate member.createdAt}}</p>
+    <p><strong>Роль:</strong> {{#if (eq member.role "ADMIN")}}Администратор{{else}}Обычный пользователь{{/if}}</p>
+
+    <form class="simple-form" method="post" action="/users/{{member.id}}/role">
+      <div class="form-group">
+        <label for="role">Изменить роль</label>
+        <select id="role" name="role">
+          <option value="USER" {{#if (eq member.role "USER")}}selected{{/if}}>Обычный пользователь</option>
+          <option value="ADMIN" {{#if (eq member.role "ADMIN")}}selected{{/if}}>Администратор</option>
+        </select>
+      </div>
+      <button type="submit" class="submit-btn">Сохранить роль</button>
+    </form>
+
+    <h3>Абонемент</h3>
+    {{#if member.membership}}
+    <p>{{member.membership.name}} — {{member.membership.price}} ₽ / {{member.membership.duration}} мес.</p>
+    {{else}}
+    <p>Абонемент не оформлен.</p>
+    {{/if}}
+
+    <h3>Отзывы участника</h3>
+    {{#if member.reviews.length}}
+    <div class="reviews-grid">
+      {{#each member.reviews}}
+      <article class="review-card">
+        <div class="review-header">
+          <span class="review-date">{{formatDate createdAt}}</span>
+        </div>
+        <p>"{{text}}"</p>
+        <p class="review-rating">Оценка: {{rating}}/5</p>
+      </article>
+      {{/each}}
+    </div>
+    {{else}}
+    <p>Участник пока не оставлял отзывов.</p>
+    {{/if}}
+
+    <div class="trainer-detail-actions">
+      <a class="submit-btn" href="/users/{{member.id}}/edit">Редактировать</a>
+      <a class="submit-btn" href="/users">К списку</a>
+    </div>
+  </section>
+</main>

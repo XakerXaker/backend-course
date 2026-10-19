@@ -1,0 +1,57 @@
+<main>
+    <section id="pricing">
+        <h2>Тарифные планы и абонементы</h2>
+
+        {{#if memberships.length}}
+        <div class="table-container">
+            <table class="membership-table">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Цена</th>
+                        <th>Срок</th>
+                        <th>Преимущества</th>
+                        <th>Участников</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each memberships}}
+                    <tr>
+                        <td><strong>{{name}}</strong></td>
+                        <td>{{price}} ₽</td>
+                        <td>{{duration}} мес.</td>
+                        <td>
+                            <ul class="membership-features">
+                                {{#each features}}
+                                <li>{{this}}</li>
+                                {{/each}}
+                            </ul>
+                        </td>
+                        <td>{{_count.users}}</td>
+                        <td>
+                            {{#if ../isAdmin}}
+                            <div class="review-actions">
+                                <a href="/pricing/{{id}}/edit">Редактировать</a>
+                                <form method="post" action="/pricing/{{id}}/delete">
+                                    <button type="submit" class="delete-btn">Удалить</button>
+                                </form>
+                            </div>
+                            {{/if}}
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <p>Пока нет абонементов. Добавьте первый через форму.</p>
+        {{/if}}
+
+        {{#if isAdmin}}
+        <div class="section-footer-actions">
+            <a class="submit-btn section-add-btn" href="/pricing/add">Добавить абонемент</a>
+        </div>
+        {{/if}}
+    </section>
+</main>

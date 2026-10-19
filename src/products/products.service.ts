@@ -1,0 +1,126 @@
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { Category, Product } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateProductDto } from "./dto/create-product.dto";
+import { UpdateProductDto } from "./dto/update-product.dto";
+
+export const CATEGORY_LABELS: Record<Category, string> = {
+  PROTEIN: "Протеины",
+  AMINO_ACIDS: "Аминокислоты",
+  FAT_BURNERS: "Жиросжигатели",
+  VITAMINS: "Витамины и минералы",
+  ACCESSORIES: "Аксессуары",
+};
+
+export interface ProductCategoryGroup {
+  category: Category;
+  label: string;
+  products: Product[];
+}
+
+@Injectable()
+export class ProductsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  findAll() {
+    return this.prisma.product.findMany({ orderBy: { name: "asc" } });
+  }
+
+  async findAllPaginated(page: number, limit: number) {
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(50, Math.max(1, limit));
+    const skip = (safePage - 1) * safeLimit;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.product.findMany({
+        skip,
+        take: safeLimit,
+        orderBy: { name: "asc" },
+      }),
+      this.prisma.product.count(),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
+    return { items, page: safePage, limit: safeLimit, total, totalPages };
+  }
+
+  async findCategorized(): Promise<ProductCategoryGroup[]> {
+    const products = await this.findAll();
+
+    const grouped = Object.fromEntries(
+      Object.values(Category).map((category) => [category, [] as Product[]]),
+    ) as Record<Category, Product[]>;
+
+    for (const product of products) {
+      grouped[product.category].push(product);
+    }
+
+    return Object.entries(grouped).map(([category, categoryProducts]) => ({
+      category: category as Category,
+      label: CATEGORY_LABELS[category as Category],
+      products: categoryProducts,
+    }));
+  }
+
+  async findOne(id: string) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+
+    if (!product) {
+      throw new NotFoundException("Товар не найден");
+    }
+
+    return product;
+  }
+
+  create(createProductDto: CreateProductDto) {
+    return this.prisma.product.create({
+      data: { ...createProductDto, stock: createProductDto.stock ?? 0 },
+    });
+  }
+
+  async update(id: string, updateProductDto: UpdateProductDto) {
+    await this.findOne(id);
+
+    return this.prisma.product.update({
+      where: { id },
+      data: updateProductDto,
+    });
+  }
+
+  async remove(id: string) {
+    await this.findOne(id);
+
+    return this.prisma.product.delete({ where: { id } });
+  }
+
+  async restock(id: string, quantity: number) {
+    await this.findOne(id);
+
+    if (quantity <= 0) {
+      throw new BadRequestException("Количество для пополнения должно быть положительным");
+    }
+
+    return this.prisma.product.update({
+      where: { id },
+      data: { stock: { increment: quantity } },
+    });
+  }
+
+  async sell(id: string, quantity: number) {
+    const product = await this.findOne(id);
+
+    if (quantity <= 0) {
+      throw new BadRequestException("Количество для продажи должно быть положительным");
+    }
+
+    if (product.stock < quantity) {
+      throw new BadRequestException("Недостаточно товара на складе");
+    }
+
+    return this.prisma.product.update({
+      where: { id },
+      data: { stock: { decrement: quantity } },
+    });
+  }
+}

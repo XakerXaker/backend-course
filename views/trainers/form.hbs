@@ -1,0 +1,69 @@
+<main>
+  <section id="trainer-form-section">
+    <h2>{{formTitle}}</h2>
+
+    <form class="simple-form" method="post" action="{{formAction}}" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="name">Имя тренера</label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          value="{{trainer.name}}"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="specialization">Специализация</label>
+        <input
+          id="specialization"
+          name="specialization"
+          type="text"
+          value="{{trainer.specialization}}"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="experience">Опыт (в годах)</label>
+        <input
+          id="experience"
+          name="experience"
+          type="number"
+          min="0"
+          value="{{trainer.experience}}"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="photo">Фото</label>
+        {{#if trainer.photoUrl}}
+        <img
+          class="trainer-photo-preview"
+          src="{{trainer.photoUrl}}"
+          alt="Текущее фото тренера {{trainer.name}}"
+        />
+        {{/if}}
+        <input id="photo" name="photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+        <p class="form-hint">
+          Файл загружается в объектное хранилище (Yandex Object Storage), не
+          указывайте ссылку вручную.{{#if trainer.photoUrl}} Оставьте поле
+          пустым, чтобы сохранить текущее фото.{{/if}}
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="bio">Описание</label>
+        <textarea id="bio" name="bio" rows="5">{{trainer.bio}}</textarea>
+      </div>
+
+      <button type="submit" class="submit-btn">{{submitLabel}}</button>
+    </form>
+
+    <p class="trainer-form-back-link">
+      <a href="/trainers">Вернуться к списку</a>
+    </p>
+  </section>
+</main>
